@@ -1,13 +1,21 @@
+import { notFound } from "next/navigation";
+import { store } from "@/lib/data";
+import { toPublicOrder } from "@/lib/public-order";
+import { OrderStatus } from "./order-status";
+
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const order = await store.getOrder(id);
+  if (!order) notFound();
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-semibold">Order {id}</h1>
-      <p className="mt-2 text-sm opacity-70">Placeholder — order status</p>
+    <main>
+      <OrderStatus initial={toPublicOrder(order)} />
     </main>
   );
 }

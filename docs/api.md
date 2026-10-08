@@ -3,8 +3,8 @@
 Status: **draft against in-memory stubs.** The schema is not approved until 12 Oct; every route
 reads and writes through the `DataStore` interface in `lib/data/store.ts`, so swapping the stub for
 Supabase changes one file. Covers RTM F3–F6, F8–F13 and F16 at the API level. F14 (confirmation
-number) is only partly covered here: `POST /api/orders` returns the order number, and the confirmation
-page that displays it is T30. F15 (kitchen view within 5 seconds) and F17–F30 are not covered.
+number) is covered by `POST /api/orders` returning the order number and the `/order/[id]` page
+showing it (T30). F15 (kitchen view within 5 seconds) and F17–F30 are not covered.
 
 Conventions
 
@@ -82,6 +82,14 @@ Reads the **raw** body, verifies `Stripe-Signature` with `STRIPE_WEBHOOK_SECRET`
 - Other event types: `200`, ignored. Bad signature: `400 invalid_signature`.
 
 This is the only place an order becomes paid.
+
+## GET /api/orders/{id}
+
+Public order status for the confirmation page (the order id is an unguessable UUID). Returns
+`id, orderNumber, paymentStatus, ticketStatus, pickupTime, subtotalCents, taxCents, totalCents, lines[]`.
+Never returns email, phone or Stripe ids. `Cache-Control: no-store`. Errors: `404 not_found`.
+The `/order/[id]` page polls this every 3 s while `pending_payment`, every 10 s until the ticket is
+`completed`, and stops on `cancelled`/`refunded`.
 
 ## PATCH /api/orders/{id}/ticket
 
