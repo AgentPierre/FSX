@@ -10,7 +10,7 @@ five-minute fix, and our own RTM row 7.02 commits us to it.
 
 ## Setup (one time)
 ```bash
-git clone https://github.com/AgentPierre/FSX.git && cd FSX
+git clone https://github.com/hiabnegash-lang/FSX.git && cd FSX
 git checkout dev
 npm install
 cp .env.example .env.local        # values from Hiab
@@ -18,7 +18,7 @@ npx supabase login
 npx supabase link --project-ref csvuhyeplcxvzlvkduwj
 npm run dev
 ```
-Every task: `git checkout dev && git pull` → `git checkout -b feature/perry-<task>` → build → PR
+Every task: `git checkout dev && git pull` → `git checkout -b feature/T<id>-perry-<desc>` → build → PR
 into `dev` → tag Hiab.
 
 ---

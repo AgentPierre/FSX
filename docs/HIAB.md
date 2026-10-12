@@ -63,8 +63,15 @@ Then in GitHub: create `dev`, protect `main` and `dev` (PR required), add Perry,
 ---
 
 ## This week (7–12 Oct) — closing W2
-- [ ] Chase Quincy and Charles for the text of BR-08, BR-20, BR-23, BR-24, BR-26. **This blocks everything.**
-- [ ] File the two RTM change-log items with Quincy (F8 email/phone, F16 completed status)
-- [ ] Confirm the 8.25% tax rate against an actual receipt
+- [ ] Get a yes or no on each proposed rule: BR-08 (special instructions), BR-20 (status on every screen), BR-23 (staff password change), BR-24 (keep orders 12 months), BR-26 (CSV export). Their text is in the Business Rules doc (2 Oct). **This blocks the ERD approval.** BR-08 and BR-20 are already in the code; drop them if rejected.
+- [ ] Settle the phone number with the team: BR-09 says name and email only, no other personal data. Recommend dropping phone.
+- [ ] Settle the final-status name: "Completed" (6 Oct decision) vs "Closed" (Business Rules doc). Recommend "Completed", with Cancelled as a payment status set by the owner (BR-29).
+- [ ] File the RTM change-log items with Quincy: F8 and 7.01 to email, F9 to 15-minute lead time, F16 to match the final status names, new rows for BR-28 (ready email), BR-29 (owner cancels), BR-32 ("Online orders only" label), and log the ready email as a change
+- [ ] Choose the email provider, check its free tier, and add it to the vendor approval request to the Program Manager with Stripe, Supabase and Vercel
+- [ ] Agree the tax rate format with Charles and Perry (`0.0825` decimal vs `825` basis points), and confirm 8.25% against an actual receipt
 - [ ] Confirm Perry rotated the Supabase credentials and the password file is gone
 - [ ] Hand Jose the design-direction brief so he isn't idle until 20 Oct
+- [ ] Get PR 2 approved by Jose and merged into `dev`, then open the T30/T31 PR (rename the branch to `feature/T30-hiab-stripe-orders` first)
+- [ ] Ask Perry to open a PR for his ERD docs and send them to Charles before 12 Oct
+- [ ] Get Noor's GitHub username and add her to the repo
+- [ ] Add Stripe test keys to `.env.local` and run one real test payment (see `docs/stripe.md`)

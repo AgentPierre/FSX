@@ -5,13 +5,13 @@ This file is your task list plus copy-paste prompts.
 
 ## Setup (one time)
 ```bash
-git clone https://github.com/AgentPierre/FSX.git && cd FSX
+git clone https://github.com/hiabnegash-lang/FSX.git && cd FSX
 git checkout dev
 npm install
 cp .env.example .env.local        # get values from Hiab — never commit this file
 npm run dev
 ```
-Every task: `git checkout dev && git pull` → `git checkout -b feature/jose-<task>` → build → PR
+Every task: `git checkout dev && git pull` → `git checkout -b feature/T<id>-jose-<desc>` → build → PR
 into `dev` → tag Hiab for review.
 
 ---
