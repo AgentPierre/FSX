@@ -15,7 +15,8 @@ const PAID_EVENTS = new Set([
 
 export async function POST(request: Request) {
   try {
-    const secret = process.env.STRIPE_WEBHOOK_SECRET;
+    // Trim: a pasted secret often carries a stray space or line break.
+    const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
     if (!secret || !stripeConfigured()) {
       throw new ApiError(
         503,
@@ -31,7 +32,16 @@ export async function POST(request: Request) {
     try {
       if (!signature) throw new Error("missing signature");
       event = getStripe().webhooks.constructEvent(raw, signature, secret);
-    } catch {
+    } catch (err) {
+      // Record why, without the secret, so a misconfiguration shows up in the server logs.
+      console.warn("Stripe webhook signature rejected", {
+        reason: err instanceof Error ? err.message : String(err),
+        hasSignatureHeader: Boolean(signature),
+        signatureHasTimestamp: /(^|,)t=/.test(signature ?? ""),
+        secretLooksLikeWebhookSecret: secret.startsWith("whsec_"),
+        secretLength: secret.length,
+        bodyLength: raw.length,
+      });
       throw new ApiError(400, "invalid_signature", "Invalid signature.");
     }
 
