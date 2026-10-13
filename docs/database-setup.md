@@ -53,7 +53,7 @@ Supabase references: [migration workflow](https://supabase.com/docs/guides/deplo
 
 ## Access and integration notes for SCRUM-64 / T25
 
-Guest clients can read the orderable menu, categories, hours and settings, but cannot read orders, lines, payments or roles. Authenticated staff/owner identities can read operational order data and update only ticket status. Only owners write menu/configuration, read Stripe references and price history, and cancel tickets. Role records are provisioned through trusted server administration after Supabase Auth users exist; no client can grant itself a role. There is no hard-delete permission for menu/history through the client API.
+Guest clients can read active menu items and sizes, categories, hours and settings, but cannot read orders, lines, payments or roles. Sold-out items remain readable with `is_available=false` so the customer UI can display them as unavailable (BR-04); the order API still rejects buying them. Archived items and their sizes are hidden. Authenticated staff/owner identities can read operational order data and update only ticket status. Only owners write menu/configuration, read Stripe references and price history, and cancel tickets. Role records are provisioned through trusted server administration after Supabase Auth users exist; no client can grant itself a role. There is no hard-delete permission for menu/history through the client API.
 
 RLS and column grants are both needed: an order UPDATE policy alone would allow financial edits. This migration revokes broad client grants and grants UPDATE only on `ticket_status`. The role lookup reads the caller's own `staff_users` row without recursion or user-editable JWT metadata. Private audit trigger functions can append logs without making log writes available to clients. See [Supabase RLS guidance](https://supabase.com/docs/guides/database/postgres/row-level-security).
 
@@ -67,4 +67,4 @@ Generate TypeScript database types only after applying the migration to a local 
 
 PR into `dev`, with `T23 -` commits and Hiab's approval; no direct push to `dev` or `main`. This migration prepares SCRUM-62 but that Jira task still needs an actual deployment and owner menu review before completion. SCRUM-64 still needs backend integration; schema files alone do not complete it.
 
-PR #1 targets `main` and is obsolete under the new workflow. It remains open until Perry explicitly confirms closing it. Preparing or merging this T23 work does not authorize that closure.
+PR #5's final ERD documents have merged into `dev` and are incorporated here with the T23 implementation notes. The old PR #1 targeting `main` is closed. This branch and PR #6 remain subject to the team's review process; nothing is merged automatically.

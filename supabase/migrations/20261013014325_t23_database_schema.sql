@@ -59,7 +59,7 @@ grant select on public.menu_items to anon, authenticated;
 grant insert, update on public.menu_items to authenticated;
 grant all on public.menu_items to service_role;
 create policy items_public_read on public.menu_items for select to anon, authenticated
-  using (is_active and is_available);
+  using (is_active);
 create policy items_team_read on public.menu_items for select to authenticated
   using ((select private.app_role()) in ('staff', 'owner'));
 create policy items_owner_insert on public.menu_items for insert to authenticated
@@ -82,7 +82,7 @@ grant select on public.item_sizes to anon, authenticated;
 grant insert, update on public.item_sizes to authenticated;
 grant all on public.item_sizes to service_role;
 create policy sizes_public_read on public.item_sizes for select to anon, authenticated
-  using (exists (select 1 from public.menu_items m where m.id = menu_item_id and m.is_active and m.is_available));
+  using (exists (select 1 from public.menu_items m where m.id = menu_item_id and m.is_active));
 create policy sizes_team_read on public.item_sizes for select to authenticated
   using ((select private.app_role()) in ('staff', 'owner'));
 create policy sizes_owner_insert on public.item_sizes for insert to authenticated
