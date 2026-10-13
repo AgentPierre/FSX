@@ -15,6 +15,7 @@ export interface PublicOrder {
     sizeName: string;
     quantity: number;
     spicy: boolean;
+    instructions: string; // the customer's own note, shown back to them
     components: string[];
   }[];
 }
@@ -34,6 +35,7 @@ export function toPublicOrder(o: Order): PublicOrder {
       sizeName: l.sizeName,
       quantity: l.quantity,
       spicy: l.spicy,
+      instructions: l.instructions,
       components: l.components,
     })),
   };
