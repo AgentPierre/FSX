@@ -92,7 +92,7 @@ Never returns email, phone or Stripe ids. `Cache-Control: no-store`. Errors: `40
 The `/order/[id]` page polls this every 3 s while `pending_payment`, every 10 s until the ticket is
 `completed`, and stops on `cancelled`/`refunded`.
 
-**Access model (accepted risk, pending dev-lead sign-off):** guests have no accounts, so the link
+**Access model (accepted risk, signed off by the dev lead 12 Oct; note it in the security review, SCRUM-85):** guests have no accounts, so the link
 `/order/{id}` is the credential, like a parcel-tracking link. The id is a random UUID v4 (122 random
 bits), so it cannot be guessed or enumerated. What the link reveals is limited: order number, items,
 the customer's own instructions, totals, pickup time and status. No name, email, phone or payment
