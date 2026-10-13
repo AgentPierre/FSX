@@ -67,7 +67,8 @@ Supabase project ref: `csvuhyeplcxvzlvkduwj` · Repo: https://github.com/hiabneg
 Two separate status columns (do not merge them):
 - **payment_status:** `pending_payment` → `paid`, or `expired` (checkout abandoned). No `refunded`.
 - **ticket_status:** null until paid → `received` → `in_progress` → `ready` → `completed`, or
-  `cancelled` (**owner only**, e.g. no-shows; final).
+  `cancelled` (**owner only**, final; allowed from any status including `completed`, e.g. no-shows or
+  a refund after pickup).
 
 Refunds happen in Stripe's dashboard, outside our system (BR-30); the owner then marks the order
 cancelled (BR-29). Reports leave cancelled orders out (BR-25). Role names: `staff` (the screen can say

@@ -17,13 +17,14 @@ export function nextStep(from: TicketStatus): TicketStatus | null {
 
 /**
  * Statuses a ticket may move to. Forward is one step at a time (BR-19). Only the owner may cancel
- * (BR-29), and only before the ticket is completed or already cancelled.
+ * (BR-29), from any status except cancelled itself. That includes completed: a refund after pickup is
+ * marked cancelled so reports leave it out (decided 12 Oct; matches the database trigger).
  */
 export function allowedNext(from: TicketStatus, role: Role): TicketStatus[] {
   const out: TicketStatus[] = [];
   const step = FORWARD[from];
   if (step) out.push(step);
-  if (role === "owner" && from !== "completed" && from !== "cancelled") {
+  if (role === "owner" && from !== "cancelled") {
     out.push("cancelled");
   }
   return out;

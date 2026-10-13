@@ -129,8 +129,8 @@ team wants a separate guest token instead, it needs a new column on `orders` (an
 
 Body `{ "status": "in_progress" }`. Roles `staff` or `owner`.
 Allowed: `received → in_progress → ready → completed`, one step at a time, no going back. The cashier/counter
-sets `completed`. `cancelled` is allowed from `received`, `in_progress` or `ready` for the **owner only**
-(BR-29, e.g. no-shows); it is final. An order that is not `paid` has `ticket_status=null` and is rejected.
+sets `completed`. `cancelled` is allowed from `received`, `in_progress`, `ready` or `completed` for the **owner only**
+(BR-29, e.g. no-shows or a refund after pickup); it is final. An order that is not `paid` has `ticket_status=null` and is rejected.
 Errors: `400 invalid_request`, `401 unauthenticated`, `403 forbidden` (a kitchen user asking for `cancelled`),
 `404 not_found`, `409 invalid_transition` (details.from/to/allowed), `409 not_paid`.
 
