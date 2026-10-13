@@ -93,7 +93,8 @@ This is the only place an order becomes paid.
 ## GET /api/orders/{id}
 
 Public order status for the confirmation page (the order id is an unguessable UUID). Returns
-`id, orderNumber, paymentStatus, ticketStatus, pickupTime, subtotalCents, taxCents, totalCents, lines[]`.
+`id, orderNumber, paymentStatus, ticketStatus, pickupTime, subtotalCents, taxCents, totalCents, lines[]`
+(each line includes the customer's own `instructions`).
 Never returns email, phone or Stripe ids. `Cache-Control: no-store`. Errors: `404 not_found`.
 The `/order/[id]` page polls this every 3 s while `pending_payment`, every 10 s until the ticket is
 `completed` or `cancelled`, and stops when the order is `expired`.
@@ -116,6 +117,13 @@ number), `page` (default 1), `pageSize` (default 25, max 100). Returns
 `{ orders: OwnerOrder[], total, page, pageSize }`. An `OwnerOrder` adds `customerEmail, customerPhone,
 paymentStatus, itemCount, subtotalCents, taxCents, totalCents, stripeSessionId` and per-line
 `unitPriceCents`. Errors: `400 invalid_request`, `401`, `403`.
+
+**Access model (accepted risk, pending dev-lead sign-off):** guests have no accounts, so the link
+`/order/{id}` is the credential, like a parcel-tracking link. The id is a random UUID v4 (122 random
+bits), so it cannot be guessed or enumerated. What the link reveals is limited: order number, items,
+the customer's own instructions, totals, pickup time and status. No name, email, phone or payment
+details. Mitigations: `noindex`, `Referrer-Policy: no-referrer`, `Cache-Control: no-store`. If the
+team wants a separate guest token instead, it needs a new column on `orders` (an ERD change).
 
 ## PATCH /api/orders/{id}/ticket
 

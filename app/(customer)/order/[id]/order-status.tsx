@@ -64,7 +64,8 @@ export function OrderStatus({ initial }: { initial: PublicOrder }) {
       "This usually takes a few seconds. Keep this page open. If you left checkout without paying, your order will not be sent to the kitchen.";
   } else if (order.paymentStatus === "expired") {
     headline = "This order was not completed.";
-    detail = "You have not been charged for it. You can start a new order.";
+    detail =
+      "It was not sent to the kitchen. If you see a charge for it, contact the restaurant and they will refund it. You can start a new order.";
   } else if (order.ticketStatus === "cancelled") {
     headline = `Order #${order.orderNumber} was cancelled.`;
     detail =
@@ -76,15 +77,14 @@ export function OrderStatus({ initial }: { initial: PublicOrder }) {
 
   return (
     <div className="mx-auto max-w-xl p-8">
-      <h1 className="text-2xl font-semibold" aria-live="polite">
-        {headline}
-      </h1>
-      <p className="mt-2">{detail}</p>
-      {lost && (
-        <p className="mt-2 text-sm opacity-70">
-          Having trouble reaching the server. Still trying…
-        </p>
-      )}
+      {/* One live region for headline + detail, so a change in either (e.g. "ready") is read out. */}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        <h1 className="text-2xl font-semibold">{headline}</h1>
+        <p className="mt-2">{detail}</p>
+      </div>
+      <p className="mt-2 text-sm opacity-70" aria-live="polite">
+        {lost ? "Having trouble reaching the server. Still trying…" : ""}
+      </p>
 
       <dl className="mt-6 space-y-1 text-sm">
         <div className="flex justify-between">
@@ -112,6 +112,11 @@ export function OrderStatus({ initial }: { initial: PublicOrder }) {
             {l.sizeName !== "regular" && ` (${l.sizeName})`}
             {l.components.length > 0 && ` – ${l.components.join(" + ")}`}
             {l.spicy && " – spicy"}
+            {l.instructions && (
+              <span className="block pl-4 opacity-70">
+                Note: {l.instructions}
+              </span>
+            )}
           </li>
         ))}
       </ul>
