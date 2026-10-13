@@ -104,7 +104,7 @@ Rules and proposals:
 - Status-value CHECKs constrain payment to `pending_payment`, `paid`, `expired` and tickets to `received`, `in_progress`, `ready`, `completed`, `cancelled`. The exact invariant is `CHECK (ticket_status IS NULL OR payment_status = 'paid')`; both pending and expired checkouts have no ticket.
 - Orders start pending. Trusted payment handling can change pending to paid (opening a received ticket in the same update) or expired. A retry uses a new order and session; an expired order cannot become paid.
 - The cashier/counter or owner advances `received → in_progress → ready → completed`. Only the owner may set `cancelled`, including on a completed ticket after a Stripe refund; payment remains paid. Cancelled is final and cannot be reopened. A no-show stays ready until the owner marks it cancelled. The trigger enforces normal progression and prevents staff cancellation.
-- The server recalculates all prices. Amounts are nonnegative, `total_cents = subtotal_cents + tax_cents`, and tax rate is between `0` and `1`. This draft proposes rounding tax once on the subtotal; rounding policy still needs confirmation.
+- The server recalculates all prices. Amounts are nonnegative, `total_cents = subtotal_cents + tax_cents`, and tax rate is between `0` and `1`. Tax is stored as a decimal fraction and rounded to integer cents at checkout.
 - Selected pickup must be at or after the stored earliest pickup and satisfy business hours. Regular orders require at least 15 minutes, catering orders at least 40, and mixed orders take the longer lead time, using settings at checkout.
 - Historical totals and tax rate are not editable by staff or owner client requests; refunds do not rewrite the original sale. Reports are labeled **Online orders only** and exclude cancelled tickets (BR-25). Refund processing stays in Stripe, outside this schema; no `refunded` payment value exists.
 
@@ -138,7 +138,7 @@ Stores the two half-order selections for a G1 Combination Plate without separate
 | `menu_item_id` | `uuid` | FK → `menu_items.id` | No | Identifies the selected entrée from G2–G10. |
 | `item_name_snapshot` | `text` | — | No | Preserves the selected half's item name as ordered. |
 
-Rules: unique `(order_line_id, component_position)`; exactly two rows for each G1 line and none for other lines. Each row is one half per parent unit, so quantity belongs to the parent line. The G1 size price covers both halves. Parent-item eligibility and exact row count require future transactional validation, beyond FK cardinality. Whether both halves may select the same entrée is unresolved; this draft does not add a uniqueness rule on the selected item.
+Rules: unique `(order_line_id, component_position)`; exactly two rows for each G1 line and none for other lines. Each row is one half per parent unit, so quantity belongs to the parent line. The G1 size price covers both halves. Parent-item eligibility and exact row count require future transactional validation, beyond FK cardinality. No uniqueness rule on the selected item is added. G7/G8 do not exist; use the existing G2–G10 codes without renumbering.
 
 ## 8. `payments`
 
@@ -182,7 +182,7 @@ Assigns an application role to a Supabase-authenticated staff or owner account.
 | `id` | `uuid` | PK; FK → `auth.users.id` | No | Reuses the authenticated Supabase user's identifier. |
 | `role` | `text` | — | No | Grants the application role `staff` or `owner`. |
 
-Rules: one optional role row per Auth user; no customer role, password, or credential column. Role assignment is controlled by trusted administration, not self-service edits. Retain referenced identities for audit history; account-deletion behavior needs approval before migrations. `auth.users` is externally managed by Supabase and is not one of the 12 application tables.
+Rules: one optional role row per Auth user; no customer role, password, or credential column. Role assignment is controlled by trusted administration, not self-service edits. Referenced identities are retained for audit history using restrictive foreign keys. The stored role name is `staff`, not `kitchen`; `auth.users` is externally managed by Supabase and is not one of the 12 application tables.
 
 ## 11. `business_hours`
 
@@ -203,7 +203,7 @@ Stores a singleton configuration record for checkout tax, lead times, and local 
 | Column | Type | Keys | Nullable | Description |
 |---|---|---|---|---|
 | `id` | `smallint` | PK | No | Identifies the sole settings record, proposed enforced value `1`. |
-| `tax_rate` | `numeric(7,6)` | — | No | Holds the current tax fraction, documented as `0.0825` pending receipt confirmation. |
+| `tax_rate` | `numeric(7,6)` | — | No | Holds the current tax fraction, documented as `0.0825` for 8.25%. |
 | `regular_lead_minutes` | `integer` | — | No | Holds the regular minimum lead time, currently `15` minutes. |
 | `catering_lead_minutes` | `integer` | — | No | Holds the catering minimum lead time, currently `40` minutes. |
 | `timezone` | `text` | — | No | Holds the restaurant's local zone, proposed value `America/Chicago`. |
@@ -214,7 +214,9 @@ Proposed rules: only row `1`, tax fraction between `0` and `1`, positive lead ti
 
 The migration and diagram follow Charles's updated column dictionary and the explicit T23 decisions. The database remains unapplied until the team reviews the PR and runs the documented Supabase commands. Availability stays at item level; display order numbers are required and globally unique, with format/allocation left to the backend rather than an invented schema column.
 
-Charles's summary keeps BR-08 (instructions), BR-20, BR-23 and BR-26; the latter three do not add columns. BR-24 is a six-month minimum retention policy. G7 and G8 do not exist on the printed menu and are intentionally absent. Do not invent or renumber them. Both halves selecting the same existing entrée remain permitted by this schema; the sponsor can clarify that checkout rule without changing these columns.
+Charles's summary keeps BR-08 (instructions), BR-20, BR-23 and BR-26; the latter three do not add columns. BR-24 is a six-month minimum retention policy with no automatic cleanup. G7 and G8 do not exist on the printed menu and are intentionally absent. Do not invent or renumber them. One session per order, optional phone, decimal tax and the final payment/ticket values are settled as described above.
+
+As in the merged T14 documents, only two design items remain open: **display order number format/allocation** (the app generates it; a running number such as `#0042` is proposed), and **sold-out level** (item versus size, with item level the working model). Showing sold-out items as unavailable under BR-04 is decided and implemented in the public read policies.
 
 Quincy's change log must reconcile **F8** (required name/email, optional phone) and **F16** (completed and owner-only cancelled). Related requirements include **F14** (display order number), **F15** (paid kitchen tickets), **F27** (temporary availability), and non-functional **4.02** (payment retry reliability). Realtime publication includes orders when the Supabase publication exists; the five-second UI requirement still needs end-to-end verification.
 

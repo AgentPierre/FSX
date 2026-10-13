@@ -141,5 +141,6 @@ erDiagram
 - Ticket: null until paid, then `received → in_progress → ready → completed`; only the owner may set final `cancelled` for a paid ticket, including a completed ticket after a Stripe refund. Cancelled cannot be reopened. CHECKs constrain both domains and enforce `ticket_status IS NULL OR payment_status = 'paid'`.
 - `tax_rate` is `numeric(7,6)` in settings and orders. Item-size and order-line unit prices are strictly positive. Phone and instructions remain nullable. `payments.order_id` is unique.
 - Reports exclude cancelled tickets and are online orders only. Item-level availability remains the working model; G7/G8 are intentional menu-code gaps. BR-08 keeps instructions, BR-24 requires at least six months of retention without automatic deletion, and the other retained rules add no columns.
+- Only display order number format/allocation and sold-out level remain open, matching the merged T14 decisions. Sold-out active items remain publicly visible as unavailable; archived items are hidden.
 
 These 12 application entities and all 81 columns match Charles's updated summary. Supabase's Auth table remains external. The T23 migration implements the documented schema and access rules; UI/API integration is a separate backend task.
