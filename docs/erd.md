@@ -1,6 +1,6 @@
 # Mermaid ERD — W2 support (T14/T15)
 
-Prepared by Perry for Charles, 7 Oct 2026. **Proposed model, pending the 12 Oct approval gate. No migrations.** The column dictionary, nullability, constraints, unresolved decisions, and source references are in [tables-overview.md](tables-overview.md).
+Prepared by Perry for Charles, 7 Oct 2026; updated to the final ERD decisions in `docs/erd/` and Hiab's PR #5 review. No migrations are included. The column dictionary, nullability, constraints, two remaining open items, and source references are in [tables-overview.md](tables-overview.md).
 
 Mermaid lists all columns from the dictionary. `PK`, `FK`, and `UK` mark keys; comments identify nullable attributes. `numeric` denotes PostgreSQL `numeric(7,6)` here. `AUTH_USERS` is the existing Supabase `auth.users` entity, shown only to make the external FK explicit; it is not an application table to create.
 
@@ -43,7 +43,7 @@ erDiagram
         uuid menu_item_id FK, UK "composite UK with size_code"
         text size_code UK "composite UK with menu_item_id"
         integer sort_order
-        integer price_cents
+        integer price_cents "CHECK price_cents greater than zero"
     }
     price_change_log {
         uuid id PK
@@ -61,8 +61,8 @@ erDiagram
         text customer_phone "nullable"
         timestamptz pickup_at
         timestamptz earliest_pickup_at
-        text payment_status
-        text ticket_status "nullable until payment confirmed"
+        text payment_status "pending_payment or paid or expired"
+        text ticket_status "nullable; received in_progress ready completed cancelled"
         integer subtotal_cents
         numeric tax_rate
         integer tax_cents
@@ -76,7 +76,7 @@ erDiagram
         uuid order_id FK
         uuid item_size_id FK
         integer quantity
-        integer unit_price_cents
+        integer unit_price_cents "CHECK unit_price_cents greater than zero"
         text item_name_snapshot
         text size_code_snapshot
         boolean spicy_requested
@@ -134,10 +134,12 @@ erDiagram
 - Each menu item belongs to exactly one category; categories can be empty. Each size belongs to one item; an orderable item must have at least one size, although an item under setup can have none.
 - A completed checkout record contains one or more lines; transactional creation must guarantee that minimum because an FK alone cannot. Each line references one size, which resolves its current item; snapshots preserve the historical label and price.
 - Each G1 line has exactly two component rows, and every other line has none. Mermaid's zero-to-many edge cannot express that conditional exact count. Component positions are `1` and `2`, with one half per ordered parent unit, and the parent price includes both halves.
-- Each order has zero or one payment association, and each payment belongs to exactly one order. Zero is necessary while a pending order exists before its Stripe session is saved. Session and order uniqueness support idempotent webhook handling.
+- Each order has zero or one payment association, and each payment belongs to exactly one order. `payments.order_id` is unique: one Stripe session per order. Zero is necessary before its session is saved. An abandoned checkout expires; a retry creates a new order/session. Session and order uniqueness support idempotent webhook handling.
 - Each price/status event has zero or one staff actor, allowing system events. Each staff role record refers to exactly one external Auth user; an Auth user may have no application role.
 - `business_hours` and singleton `settings` are intentionally separate and unconnected. Checkout uses their current values, then stores the order's applicable tax and earliest-pickup snapshots.
-- Payment: `pending_payment → paid → refunded / cancelled` is the documented high-level lifecycle. Exact cancellation/refund transitions need agreement. Ticket: null until confirmed payment, then `received → in_progress → ready → completed`. An unpaid order never reaches the kitchen. A refund may retain historical ticket status.
-- Keep item-level availability provisional, and obtain BR-08, BR-20, BR-23, BR-24, and BR-26 before approval. The dictionary records additional design choices requiring Charles's review and the F8/F16 change-log corrections.
+- Payment: `pending_payment → paid` or `pending_payment → expired`; no refunded or cancelled payment values. Ticket: null until confirmed payment, then `received → in_progress → ready → completed`, or final `cancelled` set only by the owner. Cancelled tickets cannot be reopened. Enforce `CHECK (ticket_status IS NULL OR payment_status = 'paid')`; an unpaid order never reaches the kitchen.
+- `CHECK (price_cents > 0)` on item_sizes and `CHECK (unit_price_cents > 0)` on order_lines prevent free items. Tax remains a decimal fraction, `numeric(7,6)`, in settings and orders; phone is optional and instructions are retained.
+- BR-08/20/23/26 are kept; BR-24 is a six-month minimum retention rule with no automatic cleanup. G7/G8 are intentional menu gaps. Refunds are issued in Stripe, then the owner cancels the ticket; reports exclude cancelled tickets and remain online orders only.
+- Only display order number format and sold-out level remain open. Item-level availability is the working assumption; the running-number format needs Hiab's confirmation. The dictionary also records Quincy's F8/F16 change-log corrections.
 
-The dictionary and diagram are the W2 handoff only. Charles redraws the official ERD in Visio; T23 database implementation follows approval.
+The dictionary and diagram are the T14/T15 documentation handoff, aligned to Charles's final ERD. Database implementation remains separate; this PR adds no migrations.

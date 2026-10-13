@@ -1,17 +1,17 @@
 # Tables overview — W2 support (T14/T15)
 
-Prepared by Perry for Charles, 7 Oct 2026. **Draft for the 12 Oct ERD approval gate; not an approved schema or a migration.** T23 remains blocked until approval. The matching diagram is in [erd.md](erd.md).
+Prepared by Perry for Charles, 7 Oct 2026; updated to the final ERD decisions from Charles's summary and Hiab's PR #5 review. This is a schema document, not a migration. The matching diagram is in [erd.md](erd.md).
 
-Sources: [CLAUDE.md](../CLAUDE.md), the W2 prompt in [PERRY.md](PERRY.md), and [erd-review-and-answers.md](erd-review-and-answers.md). The review supplies entity-level decisions, not a complete column dictionary. The columns below form a concrete proposed dictionary for Charles to review; UUID keys, audit fields, naming, defaults, and additional snapshots are design proposals wherever the sources do not prescribe them.
+Sources: [CLAUDE.md](../CLAUDE.md), the W2 prompt in [PERRY.md](PERRY.md), [erd-review-and-answers.md](erd-review-and-answers.md), and the final Visio ERD and `Team09-ERD-Summary (Hiab edits).docx` in `docs/erd/`. The final summary and Hiab's PR #5 review supersede the older payment/status and open-item notes. The existing column dictionary and relationships are retained.
 
 ## Conventions and decisions
 
 - PostgreSQL types are used. `timestamptz` stores instants; business-hour `time` values and reporting days are interpreted in `America/Chicago`. No money uses floating point: all amounts and unit prices are integer cents. Tax rate is a decimal fraction (`0.0825` for the currently documented 8.25%), not money.
 - `PK` = primary key; `FK` = foreign key; `UQ` = unique. `—` means no key. Every row below explicitly states nullability. Proposed UUID PKs are server-generated, and timestamps are server-set.
 - Prices belong exclusively to `item_sizes`; an unsized item has one `regular` size. Menu availability and archival are independent flags. Item-level availability is the current working assumption, pending sponsor confirmation about individual sizes selling out.
-- Historical orders retain names, size labels, unit prices, tax rate, and totals. Never hard-delete menu data referenced by historical lines, combo components, or price history. Extra size/component name snapshots below extend the review's item-name snapshot principle and need Charles's agreement.
+- Historical orders retain names, size labels, unit prices, tax rate, and totals. Never hard-delete menu data referenced by historical lines, combo components, or price history. Size/component name snapshots match Charles's final column dictionary.
 - Customers are guests: no customer table. A ticket is a paid order: no ticket table. `staff_users` contains roles only; Supabase Auth owns credentials.
-- This is a column-complete proposal for these 12 application tables, not a claim that the five missing business rules have been approved. No SQL, migrations, seeds, triggers, or database changes are included.
+- This documents the final ERD's 12 application tables. BR-08, BR-20, BR-23, BR-24 and BR-26 are decided as recorded below. No SQL, migrations, seeds, triggers, or database changes are included.
 
 ## 1. `menu_categories`
 
@@ -58,7 +58,7 @@ Defines each purchasable size and its current unit price.
 | `sort_order` | `integer` | — | No | Controls size display order, proposed default `0`. |
 | `price_cents` | `integer` | — | No | Holds the current server-authoritative unit price in cents. |
 
-Rules: unique `(menu_item_id, size_code)`; nonnegative price. Unsized items use `regular`, rice uses `sm`/`lg`, and trays use `S`/`M`/`L`. Each orderable item needs at least one size, enforced during future menu writes. Size-level availability is deliberately an open decision rather than a second assumed flag.
+Rules: unique `(menu_item_id, size_code)` and `CHECK (price_cents > 0)`; $0 sizes are not allowed. Unsized items use `regular`, rice uses `sm`/`lg`, and trays use `S`/`M`/`L`. Each orderable item needs at least one size, enforced during future menu writes. Size-level availability remains open rather than a second assumed flag.
 
 ## 4. `price_change_log`
 
@@ -73,7 +73,7 @@ Retains the old and new prices of a size when the owner changes its price.
 | `changed_by` | `uuid` | FK → `staff_users.id` | Yes | Records the owner responsible when authenticated actor information is available. |
 | `changed_at` | `timestamptz` | — | No | Records when the price changed. |
 
-Proposed rules: prices are nonnegative and differ; log actual updates, not initial insertion. A null actor means a system action, not permission for an anonymous price edit. Future T23 work will define the trigger and secure actor attribution.
+Proposed rules: old and new prices reflect the positive item-size price and differ; log actual updates, not initial insertion. A null actor means a system action, not permission for an anonymous price edit. Future T23 work will define the trigger and secure actor attribution.
 
 ## 5. `orders`
 
@@ -88,8 +88,8 @@ Stores a guest checkout, its financial snapshots, and its payment and fulfillmen
 | `customer_phone` | `text` | — | Yes | Records an optional contact phone number. |
 | `pickup_at` | `timestamptz` | — | No | Records the pickup time selected at checkout. |
 | `earliest_pickup_at` | `timestamptz` | — | No | Snapshots the earliest eligible pickup time computed at checkout. |
-| `payment_status` | `text` | — | No | Records `pending_payment`, `paid`, `refunded`, or `cancelled`, initially `pending_payment`. |
-| `ticket_status` | `text` | — | Yes | Records `received`, `in_progress`, `ready`, or `completed`, and is initially null. |
+| `payment_status` | `text` | — | No | Records `pending_payment`, `paid`, or `expired`, initially `pending_payment`. |
+| `ticket_status` | `text` | — | Yes | Records `received`, `in_progress`, `ready`, `completed`, or final owner-only `cancelled`, and is initially null. |
 | `subtotal_cents` | `integer` | — | No | Snapshots the server-calculated sum of line unit prices times quantities. |
 | `tax_rate` | `numeric(7,6)` | — | No | Snapshots the tax fraction applied to this order. |
 | `tax_cents` | `integer` | — | No | Snapshots the tax amount rounded to integer cents at checkout. |
@@ -101,11 +101,11 @@ Stores a guest checkout, its financial snapshots, and its payment and fulfillmen
 Rules and proposals:
 
 - The source requires display numbers unique at least per day. This draft proposes global uniqueness for simpler pickup lookup; Charles must choose the format and allocation method, including collision handling. A date-prefixed sequence is one possible format, not an approved choice.
-- `pending_payment` always implies null `ticket_status`; an unpaid cancellation also stays null. Only verified payment confirmation can introduce `received`. A refund after payment may retain the historical ticket state; do not erase fulfillment history or invent a refunded ticket state. Precise refund/cancellation transitions remain to be agreed.
-- The cashier/counter or owner advances tickets through `received → in_progress → ready → completed`; a no-show remains ready until the owner closes it.
-- The server recalculates all prices. Amounts are nonnegative, `total_cents = subtotal_cents + tax_cents`, and tax rate is between `0` and `1`. This draft proposes rounding tax once on the subtotal; rounding policy still needs confirmation.
+- Payment values are `pending_payment`, `paid`, `expired`; ticket values are `received`, `in_progress`, `ready`, `completed`, `cancelled`. Ticket status stays null unless paid: `CHECK (ticket_status IS NULL OR payment_status = 'paid')`. Only verified payment confirmation opens a received ticket. An abandoned checkout becomes expired; a retry creates a new order.
+- The cashier/counter or owner advances `received → in_progress → ready → completed`. Only the owner sets `cancelled`, for example for a no-show or after a refund in Stripe. Cancelled is final and cannot be reopened; payment remains paid. There is no refunded payment value.
+- The server recalculates all prices. Amounts are nonnegative, `total_cents = subtotal_cents + tax_cents`, and tax rate is between `0` and `1`. Tax is represented as a decimal fraction and rounded to integer cents at checkout.
 - Selected pickup must be at or after the stored earliest pickup and satisfy business hours. Regular orders require at least 15 minutes, catering orders at least 40, and mixed orders take the longer lead time, using settings at checkout.
-- Historical totals and tax rate are immutable after checkout; refunds do not rewrite the original sale. Reports are labeled **Online orders only**; gross/net refund reporting and revenue timestamp policy remain open.
+- Historical totals and tax rate are immutable after checkout; refunds do not rewrite the original sale. Reports exclude cancelled tickets (BR-25) and are labeled **Online orders only**; refunds are issued in Stripe (BR-30), followed by owner cancellation (BR-29).
 
 ## 6. `order_lines`
 
@@ -123,7 +123,7 @@ Stores each ordered size, its checkout snapshots, and the guest's preparation ch
 | `spicy_requested` | `boolean` | — | No | Records the guest's spicy preparation request, proposed default `false`. |
 | `instructions` | `text` | — | Yes | Records optional preparation instructions. |
 
-Rules: quantity is positive and price nonnegative. Line amount is derived as quantity times the snapshot unit price; no duplicated line-total column is proposed. All units on a line share options and combo choices; different choices require separate lines. Historical displays use snapshots, while item-level reporting joins through the retained size record.
+Rules: quantity is positive and `CHECK (unit_price_cents > 0)` disallows $0 lines. Line amount is derived as quantity times the snapshot unit price; no duplicated line-total column is proposed. All units on a line share options and combo choices; different choices require separate lines. Historical displays use snapshots, while item-level reporting joins through the retained size record. Instructions are retained under BR-08.
 
 ## 7. `order_line_components`
 
@@ -137,7 +137,7 @@ Stores the two half-order selections for a G1 Combination Plate without separate
 | `menu_item_id` | `uuid` | FK → `menu_items.id` | No | Identifies the selected entrée from G2–G10. |
 | `item_name_snapshot` | `text` | — | No | Preserves the selected half's item name as ordered. |
 
-Rules: unique `(order_line_id, component_position)`; exactly two rows for each G1 line and none for other lines. Each row is one half per parent unit, so quantity belongs to the parent line. The G1 size price covers both halves. Parent-item eligibility and exact row count require future transactional validation, beyond FK cardinality. Whether both halves may select the same entrée is unresolved; this draft does not add a uniqueness rule on the selected item.
+Rules: unique `(order_line_id, component_position)`; exactly two rows for each G1 line and none for other lines. Each row is one half per parent unit, so quantity belongs to the parent line. The G1 size price covers both halves. Parent-item eligibility and exact row count require future transactional validation, beyond FK cardinality. No uniqueness rule on the selected item is added. G7/G8 do not exist; choose from the existing G2–G10 codes without renumbering.
 
 ## 8. `payments`
 
@@ -154,7 +154,7 @@ Associates an order with its single Stripe Checkout session and optional payment
 | `paid_at` | `timestamptz` | — | Yes | Records verified payment confirmation time, with null while awaiting payment. |
 | `created_at` | `timestamptz` | — | No | Records when the session association was saved. |
 
-Rules: an order has zero or one payment row because order creation precedes Stripe session creation. Unique order and session references prevent duplicate associations; nullable intent references are unique when present. Amount must match the order total and currency before confirming payment. Verified webhook processing updates payment and order atomically and safely handles duplicate delivery; constraints alone are not the full idempotency design. No card numbers, security codes, passwords, or secret keys are stored. Refunds are issued in Stripe's dashboard; synchronization details need later design. Replacing an expired session or supporting multiple attempts would require revisiting this one-session proposal.
+Rules: one Stripe session per order; `payments.order_id` is unique, preserving the zero-or-one relationship while a session is being created. Unique session references prevent duplicate associations; nullable intent references are unique when present. Amount must match the order total and currency before confirming payment. Verified webhook processing updates payment and order atomically and safely handles duplicate delivery; constraints alone are not the full idempotency design. No card numbers, security codes, passwords, or secret keys are stored. Abandoned checkout expires; retrying creates a new order/session rather than replacing the old session. Refunds are issued in Stripe's dashboard, then the owner marks the ticket cancelled.
 
 ## 9. `order_status_log`
 
@@ -170,7 +170,7 @@ Records payment and ticket state transitions with their timestamp and optional a
 | `changed_by` | `uuid` | FK → `staff_users.id` | Yes | Records the staff or owner actor, with null for system or webhook events. |
 | `changed_at` | `timestamptz` | — | No | Records the transition time. |
 
-Proposed rules: validate status values against `status_kind` and record both transitions when payment confirmation also opens a ticket. Initial payment can log `null → pending_payment`, and first ticket status logs `null → received`. Append logs atomically with actual state changes; duplicate webhook delivery must not append duplicate transitions.
+Rules: validate status values against `status_kind`, using the same payment/ticket values as orders, and record both transitions when payment confirmation opens a ticket. Initial payment can log `null → pending_payment`, and first ticket status logs `null → received`. Owner cancellation logs a final ticket transition to `cancelled`; it does not change payment to a cancelled/refunded value. Append logs atomically with actual state changes; duplicate webhook delivery must not append duplicate transitions.
 
 ## 10. `staff_users`
 
@@ -181,7 +181,7 @@ Assigns an application role to a Supabase-authenticated staff or owner account.
 | `id` | `uuid` | PK; FK → `auth.users.id` | No | Reuses the authenticated Supabase user's identifier. |
 | `role` | `text` | — | No | Grants the application role `staff` or `owner`. |
 
-Rules: one optional role row per Auth user; no customer role, password, or credential column. Role assignment is controlled by trusted administration, not self-service edits. Retain referenced identities for audit history; account-deletion behavior needs approval before migrations. `auth.users` is externally managed by Supabase and is not one of the 12 application tables.
+Rules: one optional role row per Auth user; no customer role, password, or credential column. Role assignment is controlled by trusted administration, not self-service edits. Retain referenced identities for audit history. The role name is `staff`, not `kitchen`; `auth.users` is externally managed by Supabase and is not one of the 12 application tables.
 
 ## 11. `business_hours`
 
@@ -202,7 +202,7 @@ Stores a singleton configuration record for checkout tax, lead times, and local 
 | Column | Type | Keys | Nullable | Description |
 |---|---|---|---|---|
 | `id` | `smallint` | PK | No | Identifies the sole settings record, proposed enforced value `1`. |
-| `tax_rate` | `numeric(7,6)` | — | No | Holds the current tax fraction, documented as `0.0825` pending receipt confirmation. |
+| `tax_rate` | `numeric(7,6)` | — | No | Holds the current tax fraction, documented as `0.0825` for 8.25%. |
 | `regular_lead_minutes` | `integer` | — | No | Holds the regular minimum lead time, currently `15` minutes. |
 | `catering_lead_minutes` | `integer` | — | No | Holds the catering minimum lead time, currently `40` minutes. |
 | `timezone` | `text` | — | No | Holds the restaurant's local zone, proposed value `America/Chicago`. |
@@ -213,8 +213,21 @@ Proposed rules: only row `1`, tax fraction between `0` and `1`, positive lead ti
 
 Charles can use the matching [Mermaid ERD](erd.md) to redraw the official diagram in Visio. These files are prepared for that handoff; no message has been sent to Charles.
 
-Before approval, obtain the missing text and decisions for **BR-08, BR-20, BR-23, BR-24, and BR-26**. Do not infer their contents. Confirm availability level, display-number allocation, proposed snapshot/audit columns, the status-log representation, settings and weekday conventions, tax rounding, combo duplicate selections, payment-session retry handling, and refund/reporting policy. The menu CSV currently omits G7/G8 even though the combo eligibility rule names G2–G10; reconcile the authoritative menu before T23 seeding.
+Final decisions from Charles's summary and Hiab's review:
 
-Quincy's change log must reconcile **F8** (name and required email, optional phone) and **F16** (add `completed`). Other explicitly relevant requirements in the supplied guidance are **F14** (display order number), **F15** (paid orders reach the shared kitchen/counter view within five seconds), **F27** (temporary availability), and non-functional **4.02** (payment retry reliability). Documentation supports these requirements; it does not implement or prove them.
+- BR-08 keeps `order_lines.instructions`; BR-20, BR-23 and BR-26 are kept and add no columns.
+- BR-24 requires retaining orders for at least six months. This is a minimum, not a deletion date; add no cleanup job, and never hard-delete referenced menu data.
+- Payment values are `pending_payment`, `paid`, `expired`; ticket values are `received`, `in_progress`, `ready`, `completed`, final owner-only `cancelled`. Refunds stay in Stripe; reports exclude cancelled tickets.
+- `item_sizes.price_cents` and `order_lines.unit_price_cents` must be greater than zero through CHECK constraints.
+- One Stripe session per order, with unique `payments.order_id`. An abandoned order expires; retrying creates a new order.
+- Email is required and phone optional. G7/G8 are intentional gaps. Tax rate remains a decimal fraction, `numeric(7,6)`, in settings and orders.
+- Use the words `completed` and `staff`, not `closed` and `kitchen`, for stored status and role values.
+
+Only two design items remain open:
+
+1. **Display order number format** — a running number such as `#0042` is proposed; Hiab must confirm its format/allocation.
+2. **Sold-out level** — item versus size availability needs sponsor confirmation; item-level availability is the working model.
+
+Quincy's change log must reconcile **F8** (name and required email, optional phone) and **F16** (add `completed` and owner-only `cancelled`). Other explicitly relevant requirements in the supplied guidance are **F14** (display order number), **F15** (paid orders reach the shared kitchen/counter view within five seconds), **F27** (temporary availability), and non-functional **4.02** (payment retry reliability). Documentation supports these requirements; it does not implement or prove them.
 
 After the ERD gate, T23 can define migrations, constraints, indexes, triggers, and RLS. All tables require RLS: public reads expose orderable menu data; menu, size, and settings writes require owner authorization; orders and lines are readable by staff/owner; ticket updates require staff/owner authorization. Policies for components, payments, logs, hours, and role records must also be specified, with guest checkout and webhook writes mediated by trusted server code. Guest confirmation access needs a scoped design rather than public order reads. Future indexes include `orders.created_at`, `orders.ticket_status`, and `order_lines.order_id`; role protection and allowed-column updates must be enforced as well as row visibility. None of that implementation is performed in W2.
