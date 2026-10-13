@@ -138,7 +138,7 @@ erDiagram
 - Each price/status event has zero or one staff actor, allowing system events. Each staff role record refers to exactly one external Auth user; an Auth user may have no application role.
 - `business_hours` and singleton `settings` are intentionally separate and unconnected. Checkout uses their current values, then stores the order's applicable tax and earliest-pickup snapshots.
 - Payment: `pending_payment → paid` or `pending_payment → expired`. No refunded or cancelled payment values. One Stripe session per order; retrying an abandoned checkout creates a new order.
-- Ticket: null until paid, then `received → in_progress → ready → completed`; only the owner may set `cancelled` for a paid ticket, including after a Stripe refund. CHECKs constrain both domains and enforce `ticket_status IS NULL OR payment_status = 'paid'`.
+- Ticket: null until paid, then `received → in_progress → ready → completed`; only the owner may set final `cancelled` for a paid ticket, including a completed ticket after a Stripe refund. Cancelled cannot be reopened. CHECKs constrain both domains and enforce `ticket_status IS NULL OR payment_status = 'paid'`.
 - `tax_rate` is `numeric(7,6)` in settings and orders. Item-size and order-line unit prices are strictly positive. Phone and instructions remain nullable. `payments.order_id` is unique.
 - Reports exclude cancelled tickets and are online orders only. Item-level availability remains the working model; G7/G8 are intentional menu-code gaps. BR-08 keeps instructions, BR-24 requires at least six months of retention without automatic deletion, and the other retained rules add no columns.
 
