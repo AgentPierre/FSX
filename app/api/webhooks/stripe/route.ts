@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     if (event.type === "checkout.session.expired") {
-      // Customer left checkout without paying (Checkout sessions here last 30 minutes).
+      // Customer left checkout without paying (Checkout sessions here last 31 minutes).
       const session = event.data.object as Stripe.Checkout.Session;
       if (session.metadata?.site === siteTag()) {
         const orderId = session.client_reference_id;

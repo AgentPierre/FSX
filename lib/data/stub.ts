@@ -157,8 +157,9 @@ class StubStore implements DataStore {
     const needle = q.q?.trim().toLowerCase();
     const matches = [...this.orders.values()]
       .filter((o) => o.paymentStatus === "paid")
-      .filter((o) => !q.from || o.paidAt! >= q.from)
-      .filter((o) => !q.to || o.paidAt! < q.to)
+      // Compare instants, not strings: "10:00-05:00" and "15:00Z" are the same moment.
+      .filter((o) => !q.from || Date.parse(o.paidAt!) >= Date.parse(q.from))
+      .filter((o) => !q.to || Date.parse(o.paidAt!) < Date.parse(q.to))
       .filter((o) => !q.ticketStatus || o.ticketStatus === q.ticketStatus)
       .filter(
         (o) =>

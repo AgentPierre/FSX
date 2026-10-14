@@ -83,7 +83,7 @@ Reads the **raw** body, verifies `Stripe-Signature` with `STRIPE_WEBHOOK_SECRET`
   the Stripe test account) are ignored with `200`.
 - Order not found → `500 order_not_found`, so Stripe retries (up to 3 days) instead of the payment being lost.
 - `amount_total` ≠ order total → **not** marked paid; logged, `200` (a retry would not help).
-- `checkout.session.expired` (customer left checkout; sessions last 30 minutes) → the order whose saved
+- `checkout.session.expired` (customer left checkout; sessions last 31 minutes) → the order whose saved
   session matches is set to `expired`. A paid order is never touched.
 - `checkout.session.async_payment_failed` → logged; order stays `pending_payment`.
 - Other event types: `200`, ignored. Bad signature: `400 invalid_signature`.

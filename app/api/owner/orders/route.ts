@@ -11,8 +11,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const querySchema = z.object({
-  from: z.iso.datetime({ offset: true }).optional(),
-  to: z.iso.datetime({ offset: true }).optional(),
+  // Accept any offset, then normalise to UTC so every store compares the same instant.
+  from: z.iso
+    .datetime({ offset: true })
+    .transform((v) => new Date(v).toISOString())
+    .optional(),
+  to: z.iso
+    .datetime({ offset: true })
+    .transform((v) => new Date(v).toISOString())
+    .optional(),
   status: z.string().refine(isTicketStatus).optional(),
   q: z.string().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
