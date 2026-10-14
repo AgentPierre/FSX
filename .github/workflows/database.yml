@@ -1,0 +1,34 @@
+name: Database CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - 'supabase/**'
+      - 'docs/menu.csv'
+      - 'scripts/generate_menu_seed.py'
+      - '.github/workflows/database.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Check seed matches the authoritative CSV
+        run: python scripts/generate_menu_seed.py --check
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.78.1
+      - name: Start disposable database and apply migration and seed
+        run: supabase start
+      - name: Test constraints, historical snapshots and RLS
+        run: supabase test db
+      - name: Stop disposable database
+        if: always()
+        run: supabase stop --no-backup
