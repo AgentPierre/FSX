@@ -2,6 +2,7 @@ code,category,name,description,price_small,price_medium,price_large,price,is_spi
 A1,Appetizers,Chips (bag),,,,,1.50,false,,,
 A2,Appetizers,Egg Roll,,,,,1.50,false,,,
 A3,Appetizers,Fried Chicken Wings,6 pieces,,,,10.50,false,,,
+A4,Appetizers,Chicken Wings with French Fries,,,,,12.99,false,,,
 S1,Soup,Hot and Sour Soup,,,,,3.99,true,,,
 S2,Soup,Egg Drop Soup,,,,,3.99,false,,,
 S3,Soup,Chicken Soup,,,,,7.00,false,,,
@@ -31,6 +32,9 @@ C15,Chef's Specials,Triple Delight,"Chicken, shrimp, beef",,,,13.50,false,true,,
 C16,Chef's Specials,Tri Kung Pao,"Chicken, shrimp & beef w/ peanut",,,,13.50,true,true,,peanut allergen
 C17,Chef's Specials,Special Lo Mein,"Chicken, shrimp & beef",,,,13.50,false,false,,no rice
 C18,Chef's Specials,Shrimp with Vegetable,,,,,13.50,false,true,,
+C19,Chef's Specials,Panda Pak,"Fried rice, sweet and sour chicken and an egg roll",,,,12.99,false,false,,fixed plate; no substitutions
+C20,Chef's Specials,Mongolian Beef,,,,,12.99,false,true,,
+C21,Chef's Specials,Chef's Fried Rice with Chicken Wings,5 chicken wings,,,,13.99,false,false,,
 R1,Fried Rice,Chef's Fried Rice,,7.50,,11.90,,false,,,
 R2,Fried Rice,Shrimp Fried Rice,,7.50,,11.90,,false,,,
 R3,Fried Rice,Chicken Fried Rice,,7.50,,11.90,,false,,,

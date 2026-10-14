@@ -4,8 +4,8 @@ create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 select no_plan();
 
-select is((select count(*)::integer from public.menu_items), 42, '42 CSV items');
-select is((select count(*)::integer from public.item_sizes), 54, '54 priced sizes');
+select is((select count(*)::integer from public.menu_items), 46, '46 CSV items');
+select is((select count(*)::integer from public.item_sizes), 58, '58 priced sizes');
 select is((select count(*)::integer from public.menu_categories), 7, 'Seven CSV categories');
 select is((select count(*)::integer from public.menu_items where code in ('G7','G8')), 0, 'No invented G7/G8');
 select is((select price_cents from public.item_sizes s join public.menu_items m on m.id=s.menu_item_id
@@ -56,7 +56,7 @@ select throws_ok($$insert into public.payments(order_id,stripe_checkout_session_
 
 -- Simulate the role and JWT claims PostgREST supplies; never use editable user_metadata.
 set local role anon;
-select is((select count(*)::integer from public.menu_items),42,'Guest reads active menu');
+select is((select count(*)::integer from public.menu_items),46,'Guest reads active menu');
 select throws_ok($$select * from public.orders$$, '42501', null, 'Guest cannot read customer data');
 select throws_ok($$insert into public.menu_categories(name) values ('Anonymous')$$, '42501', null, 'Guest cannot write menu');
 select throws_ok($$select * from public.staff_users$$, '42501', null, 'Guest cannot read role data');
@@ -107,16 +107,16 @@ select throws_ok($$delete from public.menu_items where code='A2'$$,'42501',null,
 reset role;
 
 set local role anon;
-select is((select count(*)::integer from public.menu_items),42,'Sold-out item remains visible to guest');
-select is((select count(*)::integer from public.item_sizes),54,'Sold-out item sizes remain visible to guest');
+select is((select count(*)::integer from public.menu_items),46,'Sold-out item remains visible to guest');
+select is((select count(*)::integer from public.item_sizes),58,'Sold-out item sizes remain visible to guest');
 select ok((select not is_available from public.menu_items where code='A2'),'Guest can read sold-out flag to disable cart');
 reset role;
 
 -- Archival differs from temporary unavailability: archived items and sizes stay hidden.
 update public.menu_items set is_active=false where code='A2';
 set local role anon;
-select is((select count(*)::integer from public.menu_items),41,'Guest cannot see archived item');
-select is((select count(*)::integer from public.item_sizes),53,'Guest cannot see archived item sizes');
+select is((select count(*)::integer from public.menu_items),45,'Guest cannot see archived item');
+select is((select count(*)::integer from public.item_sizes),57,'Guest cannot see archived item sizes');
 reset role;
 
 select is((select count(*)::integer from public.order_status_log where status_kind='ticket'

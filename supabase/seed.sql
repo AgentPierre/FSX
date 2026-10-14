@@ -1,5 +1,5 @@
 -- T23 / SCRUM-62: generated from docs/menu.csv by scripts/generate_menu_seed.py.
--- 42 items, 54 purchasable sizes; integer cents, no invented G7/G8.
+-- 46 items, 58 purchasable sizes; integer cents, no invented G7/G8.
 -- Repeat runs preserve owner edits; this is initial loading, not a menu sync.
 begin;
 
@@ -22,6 +22,10 @@ insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cen
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
 values ('8fe9f5d9-6748-5518-97a2-0afdf5a6ebba', (select id from public.menu_categories where name = 'Appetizers'), 'A3', 'Fried Chicken Wings', '6 pieces', false, false, 3) on conflict (code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('04e5b820-d358-5148-a430-10adfb607f09', (select id from public.menu_items where code = 'A3'), 'regular', 1, 1050) on conflict (menu_item_id, size_code) do nothing;
+
+insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
+values ('4764739a-87c1-5257-80ff-6eb13aec0cf9', (select id from public.menu_categories where name = 'Appetizers'), 'A4', 'Chicken Wings with French Fries', null, false, false, 4) on conflict (code) do nothing;
+insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('1809ac73-4ab4-5b97-bd47-d897d15cba86', (select id from public.menu_items where code = 'A4'), 'regular', 1, 1299) on conflict (menu_item_id, size_code) do nothing;
 
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
 values ('cd48134a-36cf-59b8-a59e-75f0ea9f48be', (select id from public.menu_categories where name = 'Soup'), 'S1', 'Hot and Sour Soup', null, true, false, 1) on conflict (code) do nothing;
@@ -138,6 +142,18 @@ insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cen
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
 values ('14e132bd-cb30-50bd-988f-a279c1d6d0dd', (select id from public.menu_categories where name = 'Chef''s Specials'), 'C18', 'Shrimp with Vegetable', null, false, false, 18) on conflict (code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('e5af802a-5fb9-58bd-a645-9bbd631259ea', (select id from public.menu_items where code = 'C18'), 'regular', 1, 1350) on conflict (menu_item_id, size_code) do nothing;
+
+insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
+values ('48082724-2741-536c-bf22-24fc6787d3a9', (select id from public.menu_categories where name = 'Chef''s Specials'), 'C19', 'Panda Pak', 'Fried rice, sweet and sour chicken and an egg roll', false, false, 19) on conflict (code) do nothing;
+insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('518d5afb-84a5-51d5-ac0e-1e0c72091410', (select id from public.menu_items where code = 'C19'), 'regular', 1, 1299) on conflict (menu_item_id, size_code) do nothing;
+
+insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
+values ('358b9ed1-d9f6-5666-9289-6f2dfee7e66e', (select id from public.menu_categories where name = 'Chef''s Specials'), 'C20', 'Mongolian Beef', null, false, false, 20) on conflict (code) do nothing;
+insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('55994ff7-e6ee-54c9-84c0-5772c49c040f', (select id from public.menu_items where code = 'C20'), 'regular', 1, 1299) on conflict (menu_item_id, size_code) do nothing;
+
+insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
+values ('ef0ddf23-624f-5651-9407-674ca38119f4', (select id from public.menu_categories where name = 'Chef''s Specials'), 'C21', 'Chef''s Fried Rice with Chicken Wings', '5 chicken wings', false, false, 21) on conflict (code) do nothing;
+insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('3067b046-0fee-54e0-bc0b-e7720e7835e8', (select id from public.menu_items where code = 'C21'), 'regular', 1, 1399) on conflict (menu_item_id, size_code) do nothing;
 
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
 values ('3db57eee-49f0-5e49-9dd9-9479c03f1204', (select id from public.menu_categories where name = 'Fried Rice'), 'R1', 'Chef''s Fried Rice', null, false, false, 1) on conflict (code) do nothing;

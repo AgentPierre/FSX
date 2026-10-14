@@ -47,7 +47,7 @@ Check every pair against 4.5:1 before committing — RTM row 2.02 commits us to 
 - Scale: 12 / 14 / 16 / 20 / 24 / 32 / 48. Staff view starts one step larger.
 
 ## Cards
-The menu item card is the workhorse — it appears 42 times on the menu page.
+The menu item card is the workhorse — it appears 46 times on the menu page.
 - Item code as a small muted monospace chip (G1, C7) — the restaurant and the customers both use
   these codes, so keep them visible
 - Name at 16–18px semibold
