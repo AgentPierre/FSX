@@ -4,16 +4,13 @@ import { formatCents } from "@/lib/money";
 import { useCart } from "../cart-provider";
 import { ItemCustomization } from "../item-customization";
 import type { MenuItem } from "@/lib/types";
-
-const SIZE_LABELS: Record<string, string> = {
-  sm: "Small", lg: "Large", S: "Small", M: "Medium", L: "Large",
-};
+import { sizeLabel } from "@/lib/menu-display";
 
 export function MenuItemCard({ item, comboOptions }: {
   item: MenuItem;
   comboOptions: MenuItem[];
 }) {
-  const { add } = useCart();
+  const { add, settings } = useCart();
   return (
     <article aria-labelledby={`item-${item.id}`} className="h-full rounded-xl border border-[#1A3A8F]/20 bg-white p-5">
       <p className="font-mono text-sm text-[#6B6560]">{item.code}</p>
@@ -24,7 +21,7 @@ export function MenuItemCard({ item, comboOptions }: {
       <dl aria-label={`Prices for ${item.name}`} className="mt-4 space-y-2">
         {item.sizes.map((size) => (
           <div key={size.id} className="flex items-baseline justify-between gap-4">
-            <dt className="text-sm">{size.name === "regular" ? "Price" : (SIZE_LABELS[size.name] ?? size.name)}</dt>
+            <dt className="text-sm">{size.name === "regular" ? "Price" : sizeLabel(size.name)}</dt>
             <dd className="font-semibold text-[#D32F2F] tabular-nums">{formatCents(size.priceCents)}</dd>
           </div>
         ))}
@@ -37,7 +34,7 @@ export function MenuItemCard({ item, comboOptions }: {
           </ul>
         </div>
       )}
-      {item.isCatering && <p className="mt-3 text-sm text-[#6B6560]">Allow at least 40 minutes for pickup.</p>}
+      {item.isCatering && <p className="mt-3 text-sm text-[#6B6560]">{settings ? `Allow at least ${settings.leadCateringMinutes} minutes for pickup.` : "Pickup lead time is currently unavailable."}</p>}
       <ItemCustomization item={item} onSave={add} />
     </article>
   );

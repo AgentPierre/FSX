@@ -4,11 +4,13 @@ import Link from "next/link";
 import { createContext, useContext, useEffect, useReducer, useRef, useState } from "react";
 import { CART_STORAGE_KEY, CART_VERSION, cartReducer, cartSubtotalCents, checkoutLines, restoreCart, selectionPayload, validateSelection } from "@/lib/cart";
 import type { CartState, CartSelection } from "@/lib/cart";
-import type { MenuCategory } from "@/lib/types";
+import type { BusinessHour, MenuCategory, Settings } from "@/lib/types";
 import { formatCents } from "@/lib/money";
 
 interface CartContextValue extends CartState {
   menu: MenuCategory[];
+  settings: Settings | null;
+  businessHours: BusinessHour[] | null;
   subtotalCents: number | null;
   add: (selection: CartSelection) => void;
   edit: (id: string, selection: CartSelection) => void;
@@ -18,7 +20,12 @@ interface CartContextValue extends CartState {
 }
 const CartContext = createContext<CartContextValue | null>(null);
 
-export function CartProvider({ menu, children }: { menu: MenuCategory[]; children: React.ReactNode }) {
+export function CartProvider({ menu, settings, businessHours, children }: {
+  menu: MenuCategory[];
+  settings: Settings | null;
+  businessHours: BusinessHour[] | null;
+  children: React.ReactNode;
+}) {
   const [state, dispatch] = useReducer(cartReducer, { lines: [], ready: false, message: "" });
   const [storageError, setStorageError] = useState("");
   const restored = useRef(false);
@@ -48,7 +55,7 @@ export function CartProvider({ menu, children }: { menu: MenuCategory[]; childre
   const subtotalLabel = subtotalCents === null ? "Price unavailable" : formatCents(subtotalCents);
   const count = state.lines.reduce((sum, line) => sum + line.quantity, 0);
   return (
-    <CartContext.Provider value={{ ...state, menu, subtotalCents,
+    <CartContext.Provider value={{ ...state, menu, settings, businessHours, subtotalCents,
       add: (selection) => dispatch({ type: "save", line: { id: crypto.randomUUID(), ...selectionPayload(selection) }, menu, editing: false }),
       edit: (id, selection) => dispatch({ type: "save", line: { id, ...selectionPayload(selection) }, menu, editing: true }),
       remove: (id) => dispatch({ type: "remove", id }), clear: () => dispatch({ type: "clear" }),

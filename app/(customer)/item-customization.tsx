@@ -6,8 +6,8 @@ import type { CartSelection } from "@/lib/cart";
 import type { MenuItem } from "@/lib/types";
 import { formatCents } from "@/lib/money";
 import { useCart } from "./cart-provider";
+import { sizeLabel } from "@/lib/menu-display";
 
-const SIZE_LABELS: Record<string, string> = { regular: "Regular", sm: "Small", lg: "Large", S: "Small", M: "Medium", L: "Large" };
 export function ItemCustomization({ item, initial, onSave, onCancel, focusOnMount = false }: {
   item: MenuItem; initial?: CartSelection;
   onSave: (selection: CartSelection) => void; onCancel?: () => void;
@@ -70,7 +70,7 @@ export function ItemCustomization({ item, initial, onSave, onCancel, focusOnMoun
         {item.sizes.length > 1 && <div>
           <label htmlFor={`${id}-size`}>Size</label>
           <select id={`${id}-size`} className={control} value={sizeId} required onChange={(event) => setSizeId(event.target.value)}>
-            {item.sizes.map((size) => <option key={size.id} value={size.id}>{SIZE_LABELS[size.name] ?? size.name} — {formatCents(size.priceCents)}</option>)}
+            {item.sizes.map((size) => <option key={size.id} value={size.id}>{sizeLabel(size.name)} — {formatCents(size.priceCents)}</option>)}
           </select>
         </div>}
         {item.code === "G1" && <fieldset className="space-y-3">

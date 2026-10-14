@@ -1,829 +1,899 @@
-import type { MenuCategory } from '../types';
+import type { MenuCategory } from "../types";
 
-// Fixture mirrors docs/menu.csv; prices are integer cents on size rows.
-// CSV rice, drink, and allergen notes are retained in descriptions.
+// Fixture follows docs/menu.csv plus the A4/C19-C21 additions approved in PR #7.
+// Prices are integer cents on size rows; rice, drink, and allergen notes remain in descriptions.
 export const menuFixture: MenuCategory[] = [
-    {
-        "id":  "menu_category_1",
-        "name":  "Appetizers",
-        "sortOrder":  1,
-        "items":  [
-                      {
-                          "id":  "it_a1",
-                          "code":  "A1",
-                          "name":  "Chips (bag)",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_a1",
-                                            "name":  "regular",
-                                            "priceCents":  150
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_a2",
-                          "code":  "A2",
-                          "name":  "Egg Roll",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_a2",
-                                            "name":  "regular",
-                                            "priceCents":  150
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_a3",
-                          "code":  "A3",
-                          "name":  "Fried Chicken Wings",
-                          "description":  "6 pieces",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_a3",
-                                            "name":  "regular",
-                                            "priceCents":  1050
-                                        }
-                                    ]
-                      }
-                  ]
-    },
-    {
-        "id":  "menu_category_2",
-        "name":  "Soup",
-        "sortOrder":  2,
-        "items":  [
-                      {
-                          "id":  "it_s1",
-                          "code":  "S1",
-                          "name":  "Hot and Sour Soup",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_s1",
-                                            "name":  "regular",
-                                            "priceCents":  399
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_s2",
-                          "code":  "S2",
-                          "name":  "Egg Drop Soup",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_s2",
-                                            "name":  "regular",
-                                            "priceCents":  399
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_s3",
-                          "code":  "S3",
-                          "name":  "Chicken Soup",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_s3",
-                                            "name":  "regular",
-                                            "priceCents":  700
-                                        }
-                                    ]
-                      }
-                  ]
-    },
-    {
-        "id":  "menu_category_3",
-        "name":  "Gen Joe\u0027s Specials",
-        "sortOrder":  3,
-        "items":  [
-                      {
-                          "id":  "it_g1",
-                          "code":  "G1",
-                          "name":  "Combination Plate",
-                          "description":  "Half order of any two from G2-G10",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_g1",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_g2",
-                          "code":  "G2",
-                          "name":  "Gen Joe\u0027s Chicken",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_g2",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_g3",
-                          "code":  "G3",
-                          "name":  "Moo Goo Gai Pan",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_g3",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_g4",
-                          "code":  "G4",
-                          "name":  "Sweet and Sour Chicken",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_g4",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_g5",
-                          "code":  "G5",
-                          "name":  "Broccoli Chicken",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_g5",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_g6",
-                          "code":  "G6",
-                          "name":  "Broccoli Beef",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_g6",
-                                            "name":  "regular",
-                                            "priceCents":  1350
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_g9",
-                          "code":  "G9",
-                          "name":  "Vegetable Delight",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_g9",
-                                            "name":  "regular",
-                                            "priceCents":  1250
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_g10",
-                          "code":  "G10",
-                          "name":  "Spicy Mixed Vegetable",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_g10",
-                                            "name":  "regular",
-                                            "priceCents":  1250
-                                        }
-                                    ]
-                      }
-                  ]
-    },
-    {
-        "id":  "menu_category_4",
-        "name":  "Chef\u0027s Specials",
-        "sortOrder":  4,
-        "items":  [
-                      {
-                          "id":  "it_c1",
-                          "code":  "C1",
-                          "name":  "Pepper Chicken",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c1",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c2",
-                          "code":  "C2",
-                          "name":  "Szechuan Chicken",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c2",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c3",
-                          "code":  "C3",
-                          "name":  "Hot and Sour Chicken",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c3",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c4",
-                          "code":  "C4",
-                          "name":  "Spicy Broccoli Chicken w/ Brown Sauce",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c4",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c5",
-                          "code":  "C5",
-                          "name":  "Vegetable Noodle",
-                          "description":  "No rice included.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c5",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c6",
-                          "code":  "C6",
-                          "name":  "Mandarin Chicken",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c6",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c7",
-                          "code":  "C7",
-                          "name":  "Kung Pao Chicken",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c7",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c8",
-                          "code":  "C8",
-                          "name":  "Chicken with Cashew Nuts",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c8",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c9",
-                          "code":  "C9",
-                          "name":  "Pepper Steak",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c9",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c10",
-                          "code":  "C10",
-                          "name":  "Szechuan Beef",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c10",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c11",
-                          "code":  "C11",
-                          "name":  "Chicken Lo Mein",
-                          "description":  "No rice included.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c11",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c12",
-                          "code":  "C12",
-                          "name":  "Beef Lo Mein",
-                          "description":  "No rice included.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c12",
-                                            "name":  "regular",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c13",
-                          "code":  "C13",
-                          "name":  "Chicken \u0026 Shrimp with Vegetable",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c13",
-                                            "name":  "regular",
-                                            "priceCents":  1350
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c14",
-                          "code":  "C14",
-                          "name":  "Chicken \u0026 Shrimp Sauteed",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c14",
-                                            "name":  "regular",
-                                            "priceCents":  1350
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c15",
-                          "code":  "C15",
-                          "name":  "Triple Delight",
-                          "description":  "Chicken, shrimp, beef Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c15",
-                                            "name":  "regular",
-                                            "priceCents":  1350
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c16",
-                          "code":  "C16",
-                          "name":  "Tri Kung Pao",
-                          "description":  "Chicken, shrimp \u0026 beef w/ peanut Served with rice. Contains peanuts.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  true,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c16",
-                                            "name":  "regular",
-                                            "priceCents":  1350
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c17",
-                          "code":  "C17",
-                          "name":  "Special Lo Mein",
-                          "description":  "Chicken, shrimp \u0026 beef No rice included.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c17",
-                                            "name":  "regular",
-                                            "priceCents":  1350
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_c18",
-                          "code":  "C18",
-                          "name":  "Shrimp with Vegetable",
-                          "description":  "Served with rice.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_c18",
-                                            "name":  "regular",
-                                            "priceCents":  1350
-                                        }
-                                    ]
-                      }
-                  ]
-    },
-    {
-        "id":  "menu_category_5",
-        "name":  "Fried Rice",
-        "sortOrder":  5,
-        "items":  [
-                      {
-                          "id":  "it_r1",
-                          "code":  "R1",
-                          "name":  "Chef\u0027s Fried Rice",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_r1_sm",
-                                            "name":  "sm",
-                                            "priceCents":  750
-                                        },
-                                        {
-                                            "id":  "sz_r1_lg",
-                                            "name":  "lg",
-                                            "priceCents":  1190
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_r2",
-                          "code":  "R2",
-                          "name":  "Shrimp Fried Rice",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_r2_sm",
-                                            "name":  "sm",
-                                            "priceCents":  750
-                                        },
-                                        {
-                                            "id":  "sz_r2_lg",
-                                            "name":  "lg",
-                                            "priceCents":  1190
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_r3",
-                          "code":  "R3",
-                          "name":  "Chicken Fried Rice",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_r3_sm",
-                                            "name":  "sm",
-                                            "priceCents":  750
-                                        },
-                                        {
-                                            "id":  "sz_r3_lg",
-                                            "name":  "lg",
-                                            "priceCents":  1190
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_r4",
-                          "code":  "R4",
-                          "name":  "Steamed Rice",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_r4_sm",
-                                            "name":  "sm",
-                                            "priceCents":  400
-                                        },
-                                        {
-                                            "id":  "sz_r4_lg",
-                                            "name":  "lg",
-                                            "priceCents":  600
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_r5",
-                          "code":  "R5",
-                          "name":  "Beef Fried Rice",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_r5_sm",
-                                            "name":  "sm",
-                                            "priceCents":  800
-                                        },
-                                        {
-                                            "id":  "sz_r5_lg",
-                                            "name":  "lg",
-                                            "priceCents":  1299
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_r6",
-                          "code":  "R6",
-                          "name":  "Vegetable Fried Rice",
-                          "description":  "",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_r6_sm",
-                                            "name":  "sm",
-                                            "priceCents":  700
-                                        },
-                                        {
-                                            "id":  "sz_r6_lg",
-                                            "name":  "lg",
-                                            "priceCents":  1180
-                                        }
-                                    ]
-                      }
-                  ]
-    },
-    {
-        "id":  "menu_category_6",
-        "name":  "Beverages",
-        "sortOrder":  6,
-        "items":  [
-                      {
-                          "id":  "it_b1",
-                          "code":  "B1",
-                          "name":  "Soft Drink or Iced Tea",
-                          "description":  "Choose your drink from the fridge at pickup.",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  false,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_b1",
-                                            "name":  "regular",
-                                            "priceCents":  150
-                                        }
-                                    ]
-                      }
-                  ]
-    },
-    {
-        "id":  "menu_category_7",
-        "name":  "Catering Trays",
-        "sortOrder":  7,
-        "items":  [
-                      {
-                          "id":  "it_t1",
-                          "code":  "T1",
-                          "name":  "Chicken Tray",
-                          "description":  "Small / Medium / Large tray. Order ahead recommended",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  true,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_t1_s",
-                                            "name":  "S",
-                                            "priceCents":  3999
-                                        },
-                                        {
-                                            "id":  "sz_t1_m",
-                                            "name":  "M",
-                                            "priceCents":  5999
-                                        },
-                                        {
-                                            "id":  "sz_t1_l",
-                                            "name":  "L",
-                                            "priceCents":  7999
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_t2",
-                          "code":  "T2",
-                          "name":  "Shrimp Tray",
-                          "description":  "Small / Medium / Large tray. Order ahead recommended",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  true,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_t2_s",
-                                            "name":  "S",
-                                            "priceCents":  3999
-                                        },
-                                        {
-                                            "id":  "sz_t2_m",
-                                            "name":  "M",
-                                            "priceCents":  5999
-                                        },
-                                        {
-                                            "id":  "sz_t2_l",
-                                            "name":  "L",
-                                            "priceCents":  7999
-                                        }
-                                    ]
-                      },
-                      {
-                          "id":  "it_t3",
-                          "code":  "T3",
-                          "name":  "Chef\u0027s Fried Rice Tray",
-                          "description":  "Small / Medium / Large tray. Order ahead recommended",
-                          "isAvailable":  true,
-                          "isActive":  true,
-                          "isSpicyFlag":  false,
-                          "isCatering":  true,
-                          "sizes":  [
-                                        {
-                                            "id":  "sz_t3_s",
-                                            "name":  "S",
-                                            "priceCents":  3999
-                                        },
-                                        {
-                                            "id":  "sz_t3_m",
-                                            "name":  "M",
-                                            "priceCents":  5999
-                                        },
-                                        {
-                                            "id":  "sz_t3_l",
-                                            "name":  "L",
-                                            "priceCents":  7999
-                                        }
-                                    ]
-                      }
-                  ]
-    }
+  {
+    id: "menu_category_1",
+    name: "Appetizers",
+    sortOrder: 1,
+    items: [
+      {
+        id: "it_a1",
+        code: "A1",
+        name: "Chips (bag)",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_a1",
+            name: "regular",
+            priceCents: 150,
+          },
+        ],
+      },
+      {
+        id: "it_a2",
+        code: "A2",
+        name: "Egg Roll",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_a2",
+            name: "regular",
+            priceCents: 150,
+          },
+        ],
+      },
+      {
+        id: "it_a3",
+        code: "A3",
+        name: "Fried Chicken Wings",
+        description: "6 pieces",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_a3",
+            name: "regular",
+            priceCents: 1050,
+          },
+        ],
+      },
+      {
+        id: "it_a4",
+        code: "A4",
+        name: "Chicken Wings with French Fries",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_a4",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "menu_category_2",
+    name: "Soup",
+    sortOrder: 2,
+    items: [
+      {
+        id: "it_s1",
+        code: "S1",
+        name: "Hot and Sour Soup",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_s1",
+            name: "regular",
+            priceCents: 399,
+          },
+        ],
+      },
+      {
+        id: "it_s2",
+        code: "S2",
+        name: "Egg Drop Soup",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_s2",
+            name: "regular",
+            priceCents: 399,
+          },
+        ],
+      },
+      {
+        id: "it_s3",
+        code: "S3",
+        name: "Chicken Soup",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_s3",
+            name: "regular",
+            priceCents: 700,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "menu_category_3",
+    name: "Gen Joe's Specials",
+    sortOrder: 3,
+    items: [
+      {
+        id: "it_g1",
+        code: "G1",
+        name: "Combination Plate",
+        description: "Half order of any two from G2-G10",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g1",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_g2",
+        code: "G2",
+        name: "Gen Joe's Chicken",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g2",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_g3",
+        code: "G3",
+        name: "Moo Goo Gai Pan",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g3",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_g4",
+        code: "G4",
+        name: "Sweet and Sour Chicken",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g4",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_g5",
+        code: "G5",
+        name: "Broccoli Chicken",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g5",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_g6",
+        code: "G6",
+        name: "Broccoli Beef",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g6",
+            name: "regular",
+            priceCents: 1350,
+          },
+        ],
+      },
+      {
+        id: "it_g9",
+        code: "G9",
+        name: "Vegetable Delight",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g9",
+            name: "regular",
+            priceCents: 1250,
+          },
+        ],
+      },
+      {
+        id: "it_g10",
+        code: "G10",
+        name: "Spicy Mixed Vegetable",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g10",
+            name: "regular",
+            priceCents: 1250,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "menu_category_4",
+    name: "Chef's Specials",
+    sortOrder: 4,
+    items: [
+      {
+        id: "it_c1",
+        code: "C1",
+        name: "Pepper Chicken",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c1",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c2",
+        code: "C2",
+        name: "Szechuan Chicken",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c2",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c3",
+        code: "C3",
+        name: "Hot and Sour Chicken",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c3",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c4",
+        code: "C4",
+        name: "Spicy Broccoli Chicken w/ Brown Sauce",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c4",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c5",
+        code: "C5",
+        name: "Vegetable Noodle",
+        description: "No rice included.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c5",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c6",
+        code: "C6",
+        name: "Mandarin Chicken",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c6",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c7",
+        code: "C7",
+        name: "Kung Pao Chicken",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c7",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c8",
+        code: "C8",
+        name: "Chicken with Cashew Nuts",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c8",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c9",
+        code: "C9",
+        name: "Pepper Steak",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c9",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c10",
+        code: "C10",
+        name: "Szechuan Beef",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c10",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c11",
+        code: "C11",
+        name: "Chicken Lo Mein",
+        description: "No rice included.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c11",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c12",
+        code: "C12",
+        name: "Beef Lo Mein",
+        description: "No rice included.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c12",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c13",
+        code: "C13",
+        name: "Chicken & Shrimp with Vegetable",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c13",
+            name: "regular",
+            priceCents: 1350,
+          },
+        ],
+      },
+      {
+        id: "it_c14",
+        code: "C14",
+        name: "Chicken & Shrimp Sauteed",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c14",
+            name: "regular",
+            priceCents: 1350,
+          },
+        ],
+      },
+      {
+        id: "it_c15",
+        code: "C15",
+        name: "Triple Delight",
+        description: "Chicken, shrimp, beef Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c15",
+            name: "regular",
+            priceCents: 1350,
+          },
+        ],
+      },
+      {
+        id: "it_c16",
+        code: "C16",
+        name: "Tri Kung Pao",
+        description:
+          "Chicken, shrimp & beef w/ peanut Served with rice. Contains peanuts.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: true,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c16",
+            name: "regular",
+            priceCents: 1350,
+          },
+        ],
+      },
+      {
+        id: "it_c17",
+        code: "C17",
+        name: "Special Lo Mein",
+        description: "Chicken, shrimp & beef No rice included.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c17",
+            name: "regular",
+            priceCents: 1350,
+          },
+        ],
+      },
+      {
+        id: "it_c18",
+        code: "C18",
+        name: "Shrimp with Vegetable",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c18",
+            name: "regular",
+            priceCents: 1350,
+          },
+        ],
+      },
+      {
+        id: "it_c19",
+        code: "C19",
+        name: "Panda Pak",
+        description:
+          "Fried rice, sweet and sour chicken and an egg roll. Fixed plate; no substitutions.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c19",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c20",
+        code: "C20",
+        name: "Mongolian Beef",
+        description: "Served with rice.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c20",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_c21",
+        code: "C21",
+        name: "Chef's Fried Rice with Chicken Wings",
+        description: "5 chicken wings",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_c21",
+            name: "regular",
+            priceCents: 1399,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "menu_category_5",
+    name: "Fried Rice",
+    sortOrder: 5,
+    items: [
+      {
+        id: "it_r1",
+        code: "R1",
+        name: "Chef's Fried Rice",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_r1_sm",
+            name: "sm",
+            priceCents: 750,
+          },
+          {
+            id: "sz_r1_lg",
+            name: "lg",
+            priceCents: 1190,
+          },
+        ],
+      },
+      {
+        id: "it_r2",
+        code: "R2",
+        name: "Shrimp Fried Rice",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_r2_sm",
+            name: "sm",
+            priceCents: 750,
+          },
+          {
+            id: "sz_r2_lg",
+            name: "lg",
+            priceCents: 1190,
+          },
+        ],
+      },
+      {
+        id: "it_r3",
+        code: "R3",
+        name: "Chicken Fried Rice",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_r3_sm",
+            name: "sm",
+            priceCents: 750,
+          },
+          {
+            id: "sz_r3_lg",
+            name: "lg",
+            priceCents: 1190,
+          },
+        ],
+      },
+      {
+        id: "it_r4",
+        code: "R4",
+        name: "Steamed Rice",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_r4_sm",
+            name: "sm",
+            priceCents: 400,
+          },
+          {
+            id: "sz_r4_lg",
+            name: "lg",
+            priceCents: 600,
+          },
+        ],
+      },
+      {
+        id: "it_r5",
+        code: "R5",
+        name: "Beef Fried Rice",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_r5_sm",
+            name: "sm",
+            priceCents: 800,
+          },
+          {
+            id: "sz_r5_lg",
+            name: "lg",
+            priceCents: 1299,
+          },
+        ],
+      },
+      {
+        id: "it_r6",
+        code: "R6",
+        name: "Vegetable Fried Rice",
+        description: "",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_r6_sm",
+            name: "sm",
+            priceCents: 700,
+          },
+          {
+            id: "sz_r6_lg",
+            name: "lg",
+            priceCents: 1180,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "menu_category_6",
+    name: "Beverages",
+    sortOrder: 6,
+    items: [
+      {
+        id: "it_b1",
+        code: "B1",
+        name: "Soft Drink or Iced Tea",
+        description: "Choose your drink from the fridge at pickup.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_b1",
+            name: "regular",
+            priceCents: 150,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "menu_category_7",
+    name: "Catering Trays",
+    sortOrder: 7,
+    items: [
+      {
+        id: "it_t1",
+        code: "T1",
+        name: "Chicken Tray",
+        description: "Small / Medium / Large tray. Order ahead recommended",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: true,
+        sizes: [
+          {
+            id: "sz_t1_s",
+            name: "S",
+            priceCents: 3999,
+          },
+          {
+            id: "sz_t1_m",
+            name: "M",
+            priceCents: 5999,
+          },
+          {
+            id: "sz_t1_l",
+            name: "L",
+            priceCents: 7999,
+          },
+        ],
+      },
+      {
+        id: "it_t2",
+        code: "T2",
+        name: "Shrimp Tray",
+        description: "Small / Medium / Large tray. Order ahead recommended",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: true,
+        sizes: [
+          {
+            id: "sz_t2_s",
+            name: "S",
+            priceCents: 3999,
+          },
+          {
+            id: "sz_t2_m",
+            name: "M",
+            priceCents: 5999,
+          },
+          {
+            id: "sz_t2_l",
+            name: "L",
+            priceCents: 7999,
+          },
+        ],
+      },
+      {
+        id: "it_t3",
+        code: "T3",
+        name: "Chef's Fried Rice Tray",
+        description: "Small / Medium / Large tray. Order ahead recommended",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: true,
+        sizes: [
+          {
+            id: "sz_t3_s",
+            name: "S",
+            priceCents: 3999,
+          },
+          {
+            id: "sz_t3_m",
+            name: "M",
+            priceCents: 5999,
+          },
+          {
+            id: "sz_t3_l",
+            name: "L",
+            priceCents: 7999,
+          },
+        ],
+      },
+    ],
+  },
 ];

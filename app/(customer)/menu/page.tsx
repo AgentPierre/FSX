@@ -2,12 +2,11 @@
 
 import { useCart } from "../cart-provider";
 import { MenuItemCard } from "./menu-item-card";
-
-export const dynamic = "force-dynamic";
+import { businessHoursLabel } from "@/lib/menu-display";
 
 export default function Page() {
   // The layout's server-fetched snapshot also drives customization and cart prices.
-  const { menu } = useCart();
+  const { menu, settings, businessHours } = useCart();
   const categories = menu
     .map((category) => ({ ...category, items: category.items.filter((item) => item.isActive) }))
     .filter((category) => category.items.length > 0)
@@ -22,8 +21,11 @@ export default function Page() {
         <p className="font-semibold text-[#D32F2F]">Menciu&apos;s Chopstix</p>
         <h1 className="mt-2 text-3xl font-bold text-[#1A3A8F] sm:text-4xl">Our menu</h1>
         <p className="mt-3">Chinese-American favorites, freshly prepared for pickup.</p>
-        <p className="mt-2 text-sm text-[#6B6560]">6755 Hillcroft St, Houston · Monday–Saturday, 11 am–9 pm Central · Closed Sunday</p>
-        <p className="mt-3 text-sm">Any entrée can be made spicy on request. Regular orders need at least 15 minutes; catering trays need 40 minutes.</p>
+        <p className="mt-2 text-sm text-[#6B6560]">6755 Hillcroft St, Houston</p>
+        <p className="mt-2 text-sm text-[#6B6560]">{businessHours ? businessHoursLabel(businessHours) : "Business hours are currently unavailable. Please refresh the page."}</p>
+        <p className="mt-3 text-sm">Any entrée can be made spicy on request. {settings
+          ? `Regular orders need at least ${settings.leadRegularMinutes} minutes; catering trays need ${settings.leadCateringMinutes} minutes. Mixed orders take the longer lead time.`
+          : "Pickup lead times are currently unavailable. Please refresh the page."}</p>
       </header>
       {categories.length > 0 && (
         <nav aria-label="Menu categories" className="sticky top-0 z-10 border-y border-[#1A3A8F]/20 bg-[#FDF6EC]">

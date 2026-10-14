@@ -25,8 +25,8 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 export function supportsSpicy(item: MenuItem): boolean {
-  // Entrées, rice dishes (except steamed rice), and catering fillings.
-  return /^(G|C|T)/.test(item.code) || /^R[12356]$/.test(item.code);
+  // Hiab's agreed rule includes every rice dish, including R4 Steamed Rice.
+  return /^(G|C|T|R)/.test(item.code);
 }
 
 export function menuItems(menu: MenuCategory[]): MenuItem[] {

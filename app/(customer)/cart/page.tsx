@@ -6,6 +6,7 @@ import { menuItems, resolveSize, validateSelection } from "@/lib/cart";
 import { formatCents } from "@/lib/money";
 import { useCart } from "../cart-provider";
 import { ItemCustomization } from "../item-customization";
+import { sizeLabel } from "@/lib/menu-display";
 
 export default function Page() {
   const cart = useCart();
@@ -33,7 +34,7 @@ export default function Page() {
                       <h2 id={`cart-line-${line.id}`} className="text-xl font-semibold text-[#1A3A8F]">{hit?.item.code} {name}</h2>
                       <p className="font-semibold tabular-nums">{hit ? formatCents(hit.size.priceCents * line.quantity) : "Price unavailable"}</p>
                     </div>
-                    {hit && <p className="mt-2 text-sm">{hit.size.name !== "regular" && `Size: ${hit.size.name} · `}{formatCents(hit.size.priceCents)} each</p>}
+                    {hit && <p className="mt-2 text-sm">{hit.size.name !== "regular" && `Size: ${sizeLabel(hit.size.name)} · `}{formatCents(hit.size.priceCents)} each</p>}
                     {line.components.length > 0 && <p className="mt-2 text-sm">Half orders: {line.components.map((code) => `${code} — ${menuItems(cart.menu).find((item) => item.code === code)?.name ?? "Unavailable"}`).join(" + ")}</p>}
                     {line.spicy && <p className="mt-2 text-sm">Make it spicy</p>}
                     {line.instructions && <p className="mt-2 break-words text-sm">Instructions: {line.instructions}</p>}
