@@ -35,6 +35,10 @@ export async function POST(request: Request) {
       const session = await getStripe().checkout.sessions.create(
         {
           mode: "payment",
+          // Abandoned checkouts end after 31 minutes. Stripe's minimum is 30 minutes from when it
+          // receives the request, so exactly 30 can be rejected; the extra minute is the buffer.
+          // The webhook then marks the order `expired` so it never lingers as pending.
+          expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
           client_reference_id: order.id,
           customer_email: order.customerEmail,
           metadata: { order_id: order.id, site: siteTag() ?? "" },
@@ -82,7 +86,7 @@ export async function POST(request: Request) {
       );
     } catch (err) {
       console.error(err);
-      await store.cancelOrder(order.id);
+      await store.expireOrder(order.id);
       throw new ApiError(
         502,
         "stripe_error",

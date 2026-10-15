@@ -1,7 +1,9 @@
 export type Role = "staff" | "owner";
-export type PaymentStatus =
-  "pending_payment" | "paid" | "refunded" | "cancelled";
-export type TicketStatus = "received" | "in_progress" | "ready" | "completed";
+// Charles's ERD (final, 12 Oct). `expired` = checkout abandoned. There is no `refunded`: the owner
+// refunds in Stripe's dashboard and then marks the ticket cancelled (BR-29, BR-30).
+export type PaymentStatus = "pending_payment" | "paid" | "expired";
+export type TicketStatus =
+  "received" | "in_progress" | "ready" | "completed" | "cancelled"; // owner only, e.g. no-shows
 
 export interface ItemSize {
   id: string;
@@ -57,6 +59,7 @@ export interface Order {
   pickupTime: string;
   paymentStatus: PaymentStatus;
   ticketStatus: TicketStatus | null;
+  paidAt: string | null; // set when Stripe's verified confirmation arrives
   subtotalCents: number;
   taxCents: number;
   totalCents: number;
