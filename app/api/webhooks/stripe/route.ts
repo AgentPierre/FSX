@@ -45,6 +45,19 @@ export async function POST(request: Request) {
       throw new ApiError(400, "invalid_signature", "Invalid signature.");
     }
 
+    if (event.type === "checkout.session.expired") {
+      // Customer left checkout without paying (Checkout sessions here last 31 minutes).
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.metadata?.site === siteTag()) {
+        const orderId = session.client_reference_id;
+        const order = orderId ? await store.getOrder(orderId) : null;
+        // Only expire the order this exact session belongs to; paid orders are never touched.
+        if (order && order.stripeSessionId === session.id) {
+          await store.expireOrder(order.id);
+        }
+      }
+    }
+
     if (event.type === "checkout.session.async_payment_failed") {
       const session = event.data.object as Stripe.Checkout.Session;
       console.error("Delayed payment failed; order stays pending", {
@@ -84,7 +97,7 @@ export async function POST(request: Request) {
       } else {
         const result = await store.markPaid(order.id, session.id);
         if (result === "not_pending") {
-          console.error("Payment received for a cancelled/refunded order", {
+          console.error("Payment received for an expired order", {
             orderId,
             paymentStatus: order.paymentStatus,
           });

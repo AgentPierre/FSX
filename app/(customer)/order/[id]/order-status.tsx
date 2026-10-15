@@ -16,8 +16,8 @@ const TICKET_COPY = {
 
 function isFinal(o: PublicOrder) {
   return (
-    o.paymentStatus === "cancelled" ||
-    o.paymentStatus === "refunded" ||
+    o.paymentStatus === "expired" ||
+    o.ticketStatus === "cancelled" ||
     o.ticketStatus === "completed"
   );
 }
@@ -62,13 +62,14 @@ export function OrderStatus({ initial }: { initial: PublicOrder }) {
     headline = "Confirming your payment…";
     detail =
       "This usually takes a few seconds. Keep this page open. If you left checkout without paying, your order will not be sent to the kitchen.";
-  } else if (order.paymentStatus === "cancelled") {
+  } else if (order.paymentStatus === "expired") {
     headline = "This order was not completed.";
     detail =
       "It was not sent to the kitchen. If you see a charge for it, contact the restaurant and they will refund it. You can start a new order.";
-  } else if (order.paymentStatus === "refunded") {
-    headline = "This order was refunded.";
-    detail = "Contact the restaurant if you have questions.";
+  } else if (order.ticketStatus === "cancelled") {
+    headline = `Order #${order.orderNumber} was cancelled.`;
+    detail =
+      "Contact the restaurant if you have questions. Any refund is handled by the restaurant.";
   } else {
     headline = `Order #${order.orderNumber}`;
     detail = TICKET_COPY[order.ticketStatus ?? "received"];

@@ -12,7 +12,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    requireRole(request, ["staff", "owner"]);
+    const role = requireRole(request, ["staff", "owner"]);
     const { id } = await params;
     const { status } = await parseBody(request, ticketPatchSchema);
     if (!isTicketStatus(status)) {
@@ -25,8 +25,16 @@ export async function PATCH(
       throw new ApiError(409, "not_paid", "This order has not been paid.");
     }
 
-    const allowed = allowedNext(order.ticketStatus);
-    if (allowed !== status) {
+    const allowed = allowedNext(order.ticketStatus, role);
+    if (!allowed.includes(status)) {
+      // A kitchen user asking for `cancelled` is a permission problem, not a sequencing one.
+      if (status === "cancelled" && role !== "owner") {
+        throw new ApiError(
+          403,
+          "forbidden",
+          "Only the owner can cancel an order.",
+        );
+      }
       throw new ApiError(
         409,
         "invalid_transition",

@@ -65,14 +65,20 @@ Supabase project ref: `csvuhyeplcxvzlvkduwj` · Repo: https://github.com/hiabneg
 
 ## Order lifecycle
 Two separate status columns (do not merge them):
-- **payment_status:** `pending_payment` → `paid` → `refunded` / `cancelled`
-- **ticket_status:** null until paid → `received` → `in_progress` → `ready` → `completed`
+- **payment_status:** `pending_payment` → `paid`, or `expired` (checkout abandoned). No `refunded`.
+- **ticket_status:** null until paid → `received` → `in_progress` → `ready` → `completed`, or
+  `cancelled` (**owner only**, final; allowed from any status including `completed`, e.g. no-shows or
+  a refund after pickup).
+
+Refunds happen in Stripe's dashboard, outside our system (BR-30); the owner then marks the order
+cancelled (BR-29). Reports leave cancelled orders out (BR-25). Role names: `staff` (the screen can say
+"Kitchen") and `owner`.
 
 `ticket_status` must stay null while `payment_status` is `pending_payment` — an unpaid order must
 never reach the kitchen. **The cashier/counter sets `completed`** when the food is handed over
 (decided 6 Oct). Counter and kitchen share one view and one role.
 
-## Data model (Charles's ERD, pending Program Manager approval 12 Oct)
+## Data model (Charles's ERD, final 12 Oct; Program Manager approval gate 12 Oct)
 `menu_categories` · `menu_items` (code, name, description, is_available, is_active, is_spicy_flag,
 is_catering) · `item_sizes` (price lives here) · `price_change_log` · `orders` (display order
 number, customer name, email, optional phone, pickup time, both statuses, subtotal/tax/total,
@@ -81,8 +87,18 @@ spicy choice, instructions) · `order_line_components` (the two combo halves) ·
 references only, unique constraint on session id) · `order_status_log` · `staff_users` (role) ·
 `business_hours` · `settings`
 
-**Do not write migrations against this until Charles's ERD is approved.** Build against types and
-stubs; swap in the real schema after 12 Oct.
+Decisions that shape the schema (scrum 9 Oct):
+- `tax_rate` is a **decimal** (`numeric(7,6)`, 0.0825), in `settings` and snapshotted on `orders`.
+  Code converts to basis points internally.
+- **No free items:** `CHECK (price_cents > 0)` on `item_sizes` and `unit_price_cents > 0` on
+  `order_lines`. The Combination Plate's two halves are *not* separate $0 items.
+- One Stripe session per order. A retry after abandoning checkout is a new order; the old one expires.
+- Phone is **optional**. Special instructions (BR-08) are kept (`order_lines.instructions`).
+- Orders are kept at least **6 months** (BR-24), a minimum, not a delete date.
+- Order-ready email is required; SMS is optional and deferred (needs carrier registration).
+
+**Do not write migrations until the Program Manager approves the ERD.** Until Perry's T23 migration
+lands, build against `lib/data/store.ts` (the `DataStore` interface) and its in-memory stub.
 
 ## Folder layout
 ```
@@ -99,8 +115,10 @@ docs/           team docs, menu.csv, diagrams
 ```
 
 ## Known open items
-- BR-08, BR-20, BR-23, BR-24, BR-26 — five proposed business rules still unapproved; they change
-  columns. Blocking the ERD.
-- RTM **F8** says checkout collects name + phone; it must say name + email (required) + phone
-  (optional). Change-log item.
-- RTM **F16** lists three ticket states; it needs `completed`. Change-log item.
+- RTM change log (Quincy): **F8 / 7.01** (name + email required, phone optional; BR-09 wording),
+  **F9** (15-minute lead time), **F16** (add `completed` and `cancelled`), new rows for BR-28
+  (ready email), BR-29 (owner cancels), BR-32 ("Online orders only" label).
+- Order-number format (running number vs daily code) and sold-out level (item vs size) are still open;
+  item level is the working assumption.
+- Order-ready email provider (Resend or the restaurant's mailbox) needs vendor approval.
+- Staff login is still a dev stub (`lib/auth.ts`); real Supabase Auth follows the schema (T23).

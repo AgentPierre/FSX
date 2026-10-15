@@ -54,8 +54,10 @@ stripe events resend evt_XXXX
 ```
 
 The second delivery returns `200` and the order stays `paid` with a single `received` ticket.
-The store records each Stripe session id once (`markPaid` returns false on a repeat). In the real
-schema this is the unique constraint on `payments.stripe_session_id`.
+`markPaid` returns `already_paid` on a repeat and changes nothing. It also refuses to mark an order
+paid unless it is still `pending_payment` and the session matches the one saved on the order
+(`not_pending`, `session_mismatch`). In the database this is backed by unique constraints on
+`payments.order_id` and `payments.stripe_checkout_session_id`.
 
 ## Refunds
 
@@ -63,8 +65,9 @@ Issued by the owner in Stripe's own dashboard, outside our system.
 
 ## Known limits (stub phase)
 
-- Orders live in memory until the schema is approved (12 Oct). Restarting the dev server loses them.
-- Abandoned `pending_payment` orders are not yet cleaned up. Stripe sessions expire after 24 hours;
-  a later task should cancel stale pending orders.
+- Orders live in memory until the app switches to the Supabase store. Restarting the dev server loses
+  them, and on Vercel a payment can't complete yet (each request may run on a different instance).
+- Abandoned checkouts: each Checkout session expires 31 minutes after it is created, and the
+  `checkout.session.expired` webhook marks the order `expired`. An expired order can never become paid.
 - Delayed payment methods (`payment_status` ≠ `paid` on the completed event) are ignored until a
   follow-up event arrives. Cards, Apple Pay and Google Pay are immediate.

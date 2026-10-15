@@ -4,6 +4,7 @@ import type {
   Settings,
   TicketStatus,
 } from "../types";
+import type { OwnerOrderPage, OwnerOrderQuery } from "../views";
 import type { DataStore, MarkPaidResult } from "./store";
 
 import { menuFixture } from "./menu";
@@ -35,10 +36,13 @@ class StubStore implements DataStore {
   async getBusinessHours() {
     return HOURS;
   }
-  async insertOrder(o: Omit<Order, "id" | "orderNumber" | "createdAt">) {
+  async insertOrder(
+    o: Omit<Order, "id" | "orderNumber" | "createdAt" | "paidAt">,
+  ) {
     this.seq += 1;
     const order: Order = {
       ...o,
+      paidAt: null,
       id: crypto.randomUUID(),
       orderNumber: String(this.seq).padStart(4, "0"),
       createdAt: new Date().toISOString(),
@@ -53,10 +57,41 @@ class StubStore implements DataStore {
     const o = this.orders.get(orderId);
     if (o) o.stripeSessionId = sessionId;
   }
-  async cancelOrder(orderId: string) {
+  async expireOrder(orderId: string) {
     const o = this.orders.get(orderId);
-    if (o && o.paymentStatus === "pending_payment")
-      o.paymentStatus = "cancelled";
+    if (o && o.paymentStatus === "pending_payment") o.paymentStatus = "expired";
+  }
+  async listKitchenOrders() {
+    const live = ["received", "in_progress", "ready"];
+    return [...this.orders.values()]
+      .filter(
+        (o) =>
+          o.paymentStatus === "paid" &&
+          o.ticketStatus !== null &&
+          live.includes(o.ticketStatus),
+      )
+      .sort((a, b) => a.paidAt!.localeCompare(b.paidAt!));
+  }
+  async listOrders(q: OwnerOrderQuery): Promise<OwnerOrderPage> {
+    const needle = q.q?.trim().toLowerCase();
+    const matches = [...this.orders.values()]
+      .filter((o) => o.paymentStatus === "paid")
+      // Compare instants, not strings: "10:00-05:00" and "15:00Z" are the same moment.
+      .filter((o) => !q.from || Date.parse(o.paidAt!) >= Date.parse(q.from))
+      .filter((o) => !q.to || Date.parse(o.paidAt!) < Date.parse(q.to))
+      .filter((o) => !q.ticketStatus || o.ticketStatus === q.ticketStatus)
+      .filter(
+        (o) =>
+          !needle ||
+          o.customerName.toLowerCase().includes(needle) ||
+          o.orderNumber.includes(needle),
+      )
+      .sort((a, b) => b.paidAt!.localeCompare(a.paidAt!));
+    const start = (q.page - 1) * q.pageSize;
+    return {
+      orders: matches.slice(start, start + q.pageSize),
+      total: matches.length,
+    };
   }
   async markPaid(orderId: string, sessionId: string): Promise<MarkPaidResult> {
     if (this.paidSessions.has(sessionId)) return "already_paid";
@@ -67,6 +102,7 @@ class StubStore implements DataStore {
     this.paidSessions.add(sessionId);
     o.paymentStatus = "paid";
     o.ticketStatus = "received";
+    o.paidAt = new Date().toISOString();
     return "paid";
   }
   async setTicketStatus(orderId: string, status: TicketStatus) {
