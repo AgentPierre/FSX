@@ -59,7 +59,7 @@ export async function POST() {
       status: "received",
       minsAgo: 4,
       lines: [
-        line("R1", "Chicken Fried Rice", "sz_r1_lg", "lg", 899, {
+        line("R1", "Chef's Fried Rice", "sz_r1_lg", "lg", 1190, {
           quantity: 2,
         }),
         line("A2", "Egg Roll", "sz_a2", "regular", 150, { quantity: 4 }),
@@ -69,7 +69,7 @@ export async function POST() {
       name: "Priya Shah",
       status: "in_progress",
       minsAgo: 9,
-      lines: [line("T1", "Catering Tray", "sz_t1_m", "M", 5999)],
+      lines: [line("T1", "Chicken Tray", "sz_t1_m", "M", 5999)],
     },
     {
       name: "Marcus Lee",
@@ -79,7 +79,7 @@ export async function POST() {
         line("G2", "Gen Joe's Chicken", "sz_g2", "regular", 1299, {
           spicy: true,
         }),
-        line("D1", "Drink", "sz_d1", "regular", 150),
+        line("B1", "Soft Drink or Iced Tea", "sz_b1", "regular", 150),
       ],
     },
     {
