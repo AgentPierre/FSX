@@ -14,26 +14,26 @@ G5,Gen Joe's Specials,Broccoli Chicken,,,,,12.99,false,,,
 G6,Gen Joe's Specials,Broccoli Beef,,,,,13.50,false,,,
 G9,Gen Joe's Specials,Vegetable Delight,,,,,12.50,false,,,
 G10,Gen Joe's Specials,Spicy Mixed Vegetable,,,,,12.50,true,,,
-C1,Chef's Specials,Pepper Chicken,,,,,12.99,true,true,,
-C2,Chef's Specials,Szechuan Chicken,,,,,12.99,true,true,,
-C3,Chef's Specials,Hot and Sour Chicken,,,,,12.99,true,true,,
-C4,Chef's Specials,Spicy Broccoli Chicken w/ Brown Sauce,,,,,12.99,true,true,,
-C5,Chef's Specials,Vegetable Noodle,,,,,12.99,false,false,,no rice
-C6,Chef's Specials,Mandarin Chicken,,,,,12.99,true,true,,
-C7,Chef's Specials,Kung Pao Chicken,,,,,12.99,true,true,,
-C8,Chef's Specials,Chicken with Cashew Nuts,,,,,12.99,false,true,,
-C9,Chef's Specials,Pepper Steak,,,,,12.99,false,true,,
-C10,Chef's Specials,Szechuan Beef,,,,,12.99,true,true,,
-C11,Chef's Specials,Chicken Lo Mein,,,,,12.99,false,false,,no rice
-C12,Chef's Specials,Beef Lo Mein,,,,,12.99,false,false,,no rice
-C13,Chef's Specials,Chicken & Shrimp with Vegetable,,,,,13.50,false,true,,
-C14,Chef's Specials,Chicken & Shrimp Sauteed,,,,,13.50,false,true,,
-C15,Chef's Specials,Triple Delight,"Chicken, shrimp, beef",,,,13.50,false,true,,
-C16,Chef's Specials,Tri Kung Pao,"Chicken, shrimp & beef w/ peanut",,,,13.50,true,true,,peanut allergen
-C17,Chef's Specials,Special Lo Mein,"Chicken, shrimp & beef",,,,13.50,false,false,,no rice
-C18,Chef's Specials,Shrimp with Vegetable,,,,,13.50,false,true,,
-C19,Chef's Specials,Panda Pak,"Fried rice, sweet and sour chicken and an egg roll",,,,12.99,false,false,,fixed plate; no substitutions
-C20,Chef's Specials,Mongolian Beef,,,,,12.99,false,true,,
+C1,Chef's Specials,Pepper Chicken,Served with rice.,,,,12.99,true,true,,
+C2,Chef's Specials,Szechuan Chicken,Served with rice.,,,,12.99,true,true,,
+C3,Chef's Specials,Hot and Sour Chicken,Served with rice.,,,,12.99,true,true,,
+C4,Chef's Specials,Spicy Broccoli Chicken w/ Brown Sauce,Served with rice.,,,,12.99,true,true,,
+C5,Chef's Specials,Vegetable Noodle,No rice included.,,,,12.99,false,false,,no rice
+C6,Chef's Specials,Mandarin Chicken,Served with rice.,,,,12.99,true,true,,
+C7,Chef's Specials,Kung Pao Chicken,Served with rice.,,,,12.99,true,true,,
+C8,Chef's Specials,Chicken with Cashew Nuts,Served with rice.,,,,12.99,false,true,,
+C9,Chef's Specials,Pepper Steak,Served with rice.,,,,12.99,false,true,,
+C10,Chef's Specials,Szechuan Beef,Served with rice.,,,,12.99,true,true,,
+C11,Chef's Specials,Chicken Lo Mein,No rice included.,,,,12.99,false,false,,no rice
+C12,Chef's Specials,Beef Lo Mein,No rice included.,,,,12.99,false,false,,no rice
+C13,Chef's Specials,Chicken & Shrimp with Vegetable,Served with rice.,,,,13.50,false,true,,
+C14,Chef's Specials,Chicken & Shrimp Sauteed,Served with rice.,,,,13.50,false,true,,
+C15,Chef's Specials,Triple Delight,"Chicken, shrimp and beef. Served with rice.",,,,13.50,false,true,,
+C16,Chef's Specials,Tri Kung Pao,"Chicken, shrimp and beef with peanuts. Served with rice. Contains peanuts.",,,,13.50,true,true,,peanut allergen
+C17,Chef's Specials,Special Lo Mein,"Chicken, shrimp and beef. No rice included.",,,,13.50,false,false,,no rice
+C18,Chef's Specials,Shrimp with Vegetable,Served with rice.,,,,13.50,false,true,,
+C19,Chef's Specials,Panda Pak,"Fried rice, sweet and sour chicken and an egg roll. Fixed plate; no substitutions.",,,,12.99,false,false,,fixed plate; no substitutions
+C20,Chef's Specials,Mongolian Beef,Served with rice.,,,,12.99,false,true,,
 C21,Chef's Specials,Chef's Fried Rice with Chicken Wings,5 chicken wings,,,,13.99,false,false,,
 R1,Fried Rice,Chef's Fried Rice,,7.50,,11.90,,false,,,
 R2,Fried Rice,Shrimp Fried Rice,,7.50,,11.90,,false,,,
@@ -41,7 +41,7 @@ R3,Fried Rice,Chicken Fried Rice,,7.50,,11.90,,false,,,
 R4,Fried Rice,Steamed Rice,,4.00,,6.00,,false,,,
 R5,Fried Rice,Beef Fried Rice,,8.00,,12.99,,false,,,
 R6,Fried Rice,Vegetable Fried Rice,,7.00,,11.80,,false,,,
-B1,Beverages,Soft Drink or Iced Tea,,,,,1.50,false,,,customer picks any drink from the fridge at pickup
+B1,Beverages,Soft Drink or Iced Tea,Choose your drink from the fridge at pickup.,,,,1.50,false,,,customer picks any drink from the fridge at pickup
 T1,Catering Trays,Chicken Tray,Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm
 T2,Catering Trays,Shrimp Tray,Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm
 T3,Catering Trays,Chef's Fried Rice Tray,Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm

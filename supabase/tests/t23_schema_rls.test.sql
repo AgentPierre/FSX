@@ -6,6 +6,7 @@ select no_plan();
 
 select is((select count(*)::integer from public.menu_items), 46, '46 CSV items');
 select is((select count(*)::integer from public.item_sizes), 58, '58 priced sizes');
+select ok((select description like '%Contains peanuts.%' from public.menu_items where code='C16'), 'C16 shows its peanut allergen to customers');
 select is((select count(*)::integer from public.menu_categories), 7, 'Seven CSV categories');
 select is((select count(*)::integer from public.menu_items where code in ('G7','G8')), 0, 'No invented G7/G8');
 select is((select price_cents from public.item_sizes s join public.menu_items m on m.id=s.menu_item_id
