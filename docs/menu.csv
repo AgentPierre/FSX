@@ -42,6 +42,6 @@ R4,Fried Rice,Steamed Rice,,4.00,,6.00,,false,,,
 R5,Fried Rice,Beef Fried Rice,,8.00,,12.99,,false,,,
 R6,Fried Rice,Vegetable Fried Rice,,7.00,,11.80,,false,,,
 B1,Beverages,Soft Drink or Iced Tea,Choose your drink from the fridge at pickup.,,,,1.50,false,,,customer picks any drink from the fridge at pickup
-T1,Catering Trays,Chicken Tray,Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm
-T2,Catering Trays,Shrimp Tray,Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm
-T3,Catering Trays,Chef's Fried Rice Tray,Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm
+T1,Catering Trays,Chicken Fried Rice Tray,Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm
+T2,Catering Trays,Shrimp Fried Rice Tray,Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm
+T3,Catering Trays,Chef's Fried Rice Tray,Chicken and shrimp fried rice. Small / Medium / Large tray. Order ahead recommended,39.99,59.99,79.99,,false,,40,same prices for all 3 fillings - confirm

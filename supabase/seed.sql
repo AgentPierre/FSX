@@ -190,19 +190,19 @@ values ('e2b64d61-ae3e-5319-9efc-7ba29416185d', (select id from public.menu_cate
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('5c0ec93d-4708-5edd-95c7-05131f5f6d7a', (select id from public.menu_items where code = 'B1'), 'regular', 1, 150) on conflict (menu_item_id, size_code) do nothing;
 
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
-values ('e4d49b0d-cf9d-5574-9e02-e8aa9dd567e6', (select id from public.menu_categories where name = 'Catering Trays'), 'T1', 'Chicken Tray', 'Small / Medium / Large tray. Order ahead recommended', false, true, 1) on conflict (code) do nothing;
+values ('e4d49b0d-cf9d-5574-9e02-e8aa9dd567e6', (select id from public.menu_categories where name = 'Catering Trays'), 'T1', 'Chicken Fried Rice Tray', 'Small / Medium / Large tray. Order ahead recommended', false, true, 1) on conflict (code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('2e572b44-b324-5ac5-850e-9c72b0b8677b', (select id from public.menu_items where code = 'T1'), 'S', 1, 3999) on conflict (menu_item_id, size_code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('da393558-68dc-50d0-a591-301994f0adad', (select id from public.menu_items where code = 'T1'), 'M', 2, 5999) on conflict (menu_item_id, size_code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('24ae2804-734a-5f86-b37c-87cc97a95750', (select id from public.menu_items where code = 'T1'), 'L', 3, 7999) on conflict (menu_item_id, size_code) do nothing;
 
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
-values ('24543798-3a17-5652-b83b-0b819d6adbc3', (select id from public.menu_categories where name = 'Catering Trays'), 'T2', 'Shrimp Tray', 'Small / Medium / Large tray. Order ahead recommended', false, true, 2) on conflict (code) do nothing;
+values ('24543798-3a17-5652-b83b-0b819d6adbc3', (select id from public.menu_categories where name = 'Catering Trays'), 'T2', 'Shrimp Fried Rice Tray', 'Small / Medium / Large tray. Order ahead recommended', false, true, 2) on conflict (code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('d0bbd681-341f-57f0-b6c9-d05412bdb41f', (select id from public.menu_items where code = 'T2'), 'S', 1, 3999) on conflict (menu_item_id, size_code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('8f9b3080-483c-54fa-bfea-5d027275dd4f', (select id from public.menu_items where code = 'T2'), 'M', 2, 5999) on conflict (menu_item_id, size_code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('311e43e2-bc06-5857-9550-7f0913d22a98', (select id from public.menu_items where code = 'T2'), 'L', 3, 7999) on conflict (menu_item_id, size_code) do nothing;
 
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
-values ('77b137c0-ba42-5cde-8bf1-499a777cdad5', (select id from public.menu_categories where name = 'Catering Trays'), 'T3', 'Chef''s Fried Rice Tray', 'Small / Medium / Large tray. Order ahead recommended', false, true, 3) on conflict (code) do nothing;
+values ('77b137c0-ba42-5cde-8bf1-499a777cdad5', (select id from public.menu_categories where name = 'Catering Trays'), 'T3', 'Chef''s Fried Rice Tray', 'Chicken and shrimp fried rice. Small / Medium / Large tray. Order ahead recommended', false, true, 3) on conflict (code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('1954155c-66db-54af-9073-df943ac2fe47', (select id from public.menu_items where code = 'T3'), 'S', 1, 3999) on conflict (menu_item_id, size_code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('9405864e-533c-595f-b3bc-e1ef44394c00', (select id from public.menu_items where code = 'T3'), 'M', 2, 5999) on conflict (menu_item_id, size_code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('9008842b-6f63-55c8-91d5-c06f5d7adaf7', (select id from public.menu_items where code = 'T3'), 'L', 3, 7999) on conflict (menu_item_id, size_code) do nothing;
