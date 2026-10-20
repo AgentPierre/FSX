@@ -54,8 +54,11 @@ Supabase project ref: `csvuhyeplcxvzlvkduwj` · Repo: https://github.com/hiabneg
 - **Combination Plate (G1, $12.99):** the customer picks **two half orders from G2–G10**.
   The restaurant has **no G7 or G8**; codes match the printed menu exactly, gaps included. This is
   intentional — don't flag it or renumber.
-- **Spicy:** any entrée can be made spicy on request. It's an option on the order line, not a
-  separate item. The ★ on the menu is a display flag only.
+- **Fixed plates:** C19 Panda Pak (fried rice, sweet and sour chicken, egg roll) has no
+  substitutions; it can be made spicy. The menu has **46 items** (added A4, C19–C21 on 13 Oct).
+- **Spicy:** an option on the order line, not a separate item. Allowed on every **G, C and T** item
+  and **all fried rice R1–R6 (including R4 Steamed Rice)**. Not allowed on appetizers (A, including
+  the wings), soups (S) or drinks (B). The ★ on the menu is a display flag only (decided 12–13 Oct).
 - **Drinks:** one $1.50 item; the customer picks from the fridge at pickup.
 - **Catering trays:** paid online up front, 40-minute minimum.
 - **Payments:** card, Apple Pay, Google Pay via Stripe Checkout. Refunds are issued by the owner

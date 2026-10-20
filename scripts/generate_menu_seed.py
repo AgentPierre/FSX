@@ -21,12 +21,12 @@ def generate() -> str:
     with (ROOT / "docs/menu.csv").open(encoding="utf-8-sig", newline="") as source:
         rows = list(csv.DictReader(source))
     codes = [row["code"] for row in rows]
-    if len(rows) != 42 or len(set(codes)) != 42 or {"G7", "G8"} & set(codes):
-        raise ValueError("Expected exactly 42 unique menu codes, with no G7/G8")
+    if len(rows) != 46 or len(set(codes)) != 46 or {"G7", "G8"} & set(codes):
+        raise ValueError("Expected exactly 46 unique menu codes, with no G7/G8")
     categories = list(dict.fromkeys(row["category"] for row in rows))
     sql = [
         "-- T23 / SCRUM-62: generated from docs/menu.csv by scripts/generate_menu_seed.py.",
-        "-- 42 items, 54 purchasable sizes; integer cents, no invented G7/G8.",
+        "-- 46 items, 58 purchasable sizes; integer cents, no invented G7/G8.",
         "-- Repeat runs preserve owner edits; this is initial loading, not a menu sync.",
         "begin;",
         "",
@@ -84,8 +84,8 @@ def generate() -> str:
                 "on conflict (menu_item_id, size_code) do nothing;"
             )
             size_count += 1
-    if size_count != 54:
-        raise ValueError(f"Expected 54 sizes, found {size_count}")
+    if size_count != 58:
+        raise ValueError(f"Expected 58 sizes, found {size_count}")
     sql += [
         "",
         "-- Restaurant configuration from CLAUDE.md, not invented menu prices.",
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     if options.check:
         if not target.exists() or target.read_text(encoding="utf-8") != output:
             raise SystemExit("seed.sql does not match docs/menu.csv; regenerate it")
-        print("Seed matches the CSV: 42 items and 54 sizes")
+        print("Seed matches the CSV: 46 items and 58 sizes")
     else:
         target.write_text(output, encoding="utf-8", newline="\n")
-        print("Generated supabase/seed.sql: 42 items and 54 sizes")
+        print("Generated supabase/seed.sql: 46 items and 58 sizes")
