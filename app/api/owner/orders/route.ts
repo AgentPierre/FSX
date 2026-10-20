@@ -29,7 +29,7 @@ const querySchema = z.object({
 /** Owner order history: paid orders, newest first, with filters and pagination (T34). */
 export async function GET(request: Request) {
   try {
-    requireRole(request, ["owner"]);
+    await requireRole(request, ["owner"]);
     const raw = Object.fromEntries(new URL(request.url).searchParams);
     const parsed = querySchema.safeParse(raw);
     if (!parsed.success) {

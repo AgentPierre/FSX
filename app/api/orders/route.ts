@@ -30,6 +30,7 @@ export async function POST(request: Request) {
 
     const { order, earliestPickup } = await createPendingOrder(body);
 
+    let stripeSessionId: string | undefined;
     try {
       const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
       const session = await getStripe().checkout.sessions.create(
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
         },
         { idempotencyKey: `order-${order.id}` },
       );
+      stripeSessionId = session.id;
       if (!session.url) throw new Error("Stripe returned no checkout URL.");
       await store.setStripeSession(order.id, session.id);
 
@@ -86,6 +88,15 @@ export async function POST(request: Request) {
       );
     } catch (err) {
       console.error(err);
+      if (stripeSessionId) {
+        try {
+          // A failed database attachment must not leave an open, payable checkout behind.
+          await getStripe().checkout.sessions.expire(stripeSessionId);
+        } catch {
+          // Still expire the pending order if Stripe cleanup fails; flag it for follow-up.
+          console.error("Stripe checkout cleanup failed; check for an unattached payable session.");
+        }
+      }
       await store.expireOrder(order.id);
       throw new ApiError(
         502,

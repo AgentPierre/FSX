@@ -106,6 +106,12 @@ cp .env.example .env.local   # values from Hiab, never commit this file
 npm run dev
 ```
 
+For local UI work without Supabase keys (including Noor's kitchen dev seed), set `FSX_DATA_SOURCE=stub` in ignored `.env.local`. Otherwise the app defaults to the live Supabase database. Stub mode is refused in production.
+
+### Release database check
+
+Keep Supabase auto-deploy from `main` enabled. Before each release, all migrations must already be applied through the reviewed dry-run process; `supabase migration list --linked` must show none pending. Do not merge a release with an unapplied migration.
+
 ## Using Claude Code or Codex
 
 Both read their instructions from the repo, so pulling `dev` updates them:

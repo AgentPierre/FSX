@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { store } from "@/lib/data";
+import { usingStub } from "@/lib/data/mode";
 import type { OrderLine, TicketStatus } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -9,7 +10,7 @@ export const runtime = "nodejs";
  * built without Stripe. Returns 404 in production. Remove when the Supabase store replaces the stub.
  */
 export async function POST() {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" || !usingStub()) {
     return NextResponse.json(
       { error: { code: "not_found", message: "Not found." } },
       { status: 404 },
