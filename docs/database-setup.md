@@ -12,7 +12,7 @@ This branch prepares the database schema and initial menu load. It does not appl
 
 The supplied Downloads menu matches the repository CSV exactly. Names, codes, descriptions, spicy flags and prices come from that CSV. Empty descriptions become SQL null; regular prices produce one `regular` size, rice prices produce `sm`/`lg`, and tray prices produce `S`/`M`/`L`. Availability defaults to active/available. Catering follows the CSV's 40-minute lead marker. `served_with_rice`, `notes`, and per-item lead minutes have no columns in Charles's final model; they are retained in the unmodified CSV, not silently turned into extra schema fields. Checkout uses the regular/catering lead settings.
 
-Seed runs insert missing rows and preserve existing owner edits; they do not synchronize or overwrite a live menu. Do not seed test staff accounts into the hosted project. G7 and G8 do not exist and are not generated.
+Seed runs insert missing rows and preserve existing owner edits; they do not synchronize or overwrite a live menu. Hiab allows one clearly labelled test owner and one test staff account in the hosted project, provisioned separately from the seed through trusted administration. They must be removed from active use before final handover; see [account provisioning and cleanup](supabase-connection.md#provisioning-temporary-test-accounts). G7 and G8 do not exist and are not generated.
 
 ## Apply to a local development database
 
