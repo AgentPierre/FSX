@@ -21,6 +21,7 @@ export interface DataStore {
   getBusinessHours(): Promise<BusinessHour[]>;
   insertOrder(
     order: Omit<Order, "id" | "orderNumber" | "createdAt" | "paidAt">,
+    earliestPickupAt?: string,
   ): Promise<Order>;
   getOrder(id: string): Promise<Order | null>;
   setStripeSession(orderId: string, sessionId: string): Promise<void>;

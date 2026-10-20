@@ -88,13 +88,16 @@ export async function POST(request: Request) {
 
       if (session.payment_status !== "paid") {
         // Delayed method still processing; async_payment_succeeded will follow.
-      } else if (session.amount_total !== order.totalCents) {
+      } else if (session.amount_total !== order.totalCents || session.currency !== "usd") {
         console.error("Webhook amount mismatch; not marking paid", {
           orderId,
           expected: order.totalCents,
           got: session.amount_total,
         });
       } else {
+        if (!order.stripeSessionId) {
+          throw new ApiError(503, "checkout_not_ready", "Payment association is not ready; retry later.");
+        }
         const result = await store.markPaid(order.id, session.id);
         if (result === "not_pending") {
           console.error("Payment received for an expired order", {

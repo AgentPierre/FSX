@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 /** Kitchen and counter board: paid tickets still in play, oldest first. Staff and owner. */
 export async function GET(request: Request) {
   try {
-    requireRole(request, ["staff", "owner"]);
+    await requireRole(request, ["staff", "owner"]);
     const orders = await store.listKitchenOrders();
     return NextResponse.json(
       { tickets: orders.map(toKitchenTicket) },
