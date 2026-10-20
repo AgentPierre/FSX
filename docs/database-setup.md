@@ -5,7 +5,7 @@ This branch prepares the database schema and initial menu load. It does not appl
 ## Files and scope
 
 - `supabase/migrations/20261013014325_t23_database_schema.sql`: all 12 tables, constraints, indexes, RLS, menu timestamps, price/status audit triggers and owner-only ticket cancellation.
-- `supabase/seed.sql`: exactly 42 menu items and 54 purchasable sizes generated from `docs/menu.csv`, plus seven business-hour rows and one settings row.
+- `supabase/seed.sql`: exactly 46 menu items and 58 purchasable sizes generated from `docs/menu.csv`, plus seven business-hour rows and one settings row.
 - `scripts/generate_menu_seed.py`: reproducible CSV-to-SQL conversion using Decimal arithmetic and stable IDs; it never edits the CSV.
 - `supabase/tests/t23_schema_rls.test.sql`: disposable-database tests for access rules, payment/ticket values, positive prices, uniqueness and historical snapshots.
 - `.github/workflows/database.yml`: applies migration/seed and runs database tests on GitHub, separately from application CI. Both checks must pass before merging.
@@ -26,7 +26,7 @@ npx --yes supabase@2.78.1 test db
 
 On a fresh local stack, `start` applies migrations and seeds during initialization. The explicit local push also covers an existing stack with pending migrations; the seed is repeatable. These commands do not target the linked hosted project. Avoid `db reset` on a local database whose data you want to keep: it rebuilds that database.
 
-Expected initial counts are seven categories, 42 items, 54 sizes, seven business-hour rows and one settings row. Tests run in a transaction that rolls back the test identities, orders and edits. The database CI uses the same pinned CLI and a disposable stack. No local test suite is used as a pre-PR gate in Perry's Codex workflow.
+Expected initial counts are seven categories, 46 items, 58 sizes, seven business-hour rows and one settings row. Tests run in a transaction that rolls back the test identities, orders and edits. The database CI uses the same pinned CLI and a disposable stack. No local test suite is used as a pre-PR gate in Perry's Codex workflow.
 
 ## Push migrations and seed to the team project
 

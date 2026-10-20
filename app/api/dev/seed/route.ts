@@ -69,7 +69,7 @@ export async function POST() {
       name: "Priya Shah",
       status: "in_progress",
       minsAgo: 9,
-      lines: [line("T1", "Chicken Tray", "sz_t1_m", "M", 5999)],
+      lines: [line("T1", "Chicken Fried Rice Tray", "sz_t1_m", "M", 5999)],
     },
     {
       name: "Marcus Lee",
