@@ -49,8 +49,8 @@ Table types in `lib/database.types.ts` are generated from the deployed T23 schem
 
 An app connection and a repository deployment integration are separate. The former uses runtime environment variables; the latter lets Supabase respond to GitHub repository changes.
 
-In Supabase **Project Settings → Integrations → GitHub repository**, the current account cannot find `hiabnegash-lang/FSX`; it lists the account's own authorized repositories instead. Hiab must authorize/install the Supabase GitHub app for **only** that repository, or provide the needed repository-administration permission. Do not connect an unrelated personal repository.
+Verified in the Supabase dashboard: this project is connected to `hiabnegash-lang/FSX`. Its saved working directory is `.`, **Deploy to production** is enabled, and the production branch is `main`. Automatic preview branching is off. These existing settings were inspected and left unchanged.
 
-After authorization, choose `hiabnegash-lang/FSX`, inspect available branch/deployment settings and the plan/cost requirements, and select the integration branch deliberately. The team's migration source is `dev`; `main` is releases only, so do not enable automatic production database changes on every push to main without agreeing the deployment policy. Preview branches can incur charges; do not enable them without explicit cost approval. GitHub linkage does not replace Vercel runtime credentials.
+The team reviews changes into `dev`; the saved production integration deploys from `main`. Merging this PR into `dev` therefore does not apply its migration to the hosted production database. Apply it through a reviewed release or a separately approved CLI deployment after inspecting the dry-run output. Supabase preview checks are skipped while automatic branching is off. GitHub linkage does not replace Vercel runtime credentials; configure the runtime variables above in the appropriate hosting environments.
 
-No repository access grant, automatic production deployment, hosted Auth configuration change, or paid branch is enabled by this code PR.
+No repository access grant, integration setting change, hosted Auth configuration change, or paid branch was made by this code PR.

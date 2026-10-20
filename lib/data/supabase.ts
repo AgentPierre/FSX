@@ -148,7 +148,8 @@ class SupabaseStore implements DataStore {
       request = request.or(`customer_name.ilike.${literal},display_order_number.ilike.${literal}`);
     }
     const start = (query.page-1)*query.pageSize;
-    const { data, error, count } = await request.order("paid_at", { referencedTable: "payments", ascending: false })
+    // Sort parent orders before pagination, using the one-to-one payment relationship.
+    const { data, error, count } = await request.order("payments(paid_at)", { ascending: false })
       .order("id").range(start,start+query.pageSize-1);
     check(error);
     return { orders: await mapOrders(data ?? []), total: count ?? 0 };
