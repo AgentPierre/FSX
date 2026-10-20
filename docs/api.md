@@ -49,6 +49,9 @@ Request
 - `customer.name` and `customer.email` required; `phone` optional (RTM F8 correction pending).
 - `components` required for G1 (exactly two codes from G2–G10, repeats allowed), forbidden elsewhere.
 - `quantity` 1–50. `instructions` max 200 chars.
+- `spicy: true` is only accepted on G, C and T items and fried rice R1–R6 (including steamed rice); on appetizers
+  (including the wings), soups and drinks the server returns `400 invalid_request` ("… can't be made spicy").
+  The rule lives in `lib/menu-rules.ts`, shared by the cart and the API.
 
 Server steps: validate → check business hours → recompute prices → lead time = max of lines
 (15 min regular, 40 min catering) → `pickupTime` must be ≥ now + lead and inside that day's hours →

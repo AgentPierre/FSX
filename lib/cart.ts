@@ -1,3 +1,4 @@
+import { allowsSpicy } from "./menu-rules";
 import type { CreateOrderInput, MenuCategory, MenuItem } from "./types";
 
 export const CART_VERSION = 1;
@@ -25,8 +26,8 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 export function supportsSpicy(item: MenuItem): boolean {
-  // Hiab's agreed rule includes every rice dish, including R4 Steamed Rice.
-  return /^(G|C|T|R)/.test(item.code);
+  // One rule shared with the order API (lib/menu-rules.ts).
+  return allowsSpicy(item.code);
 }
 
 export function menuItems(menu: MenuCategory[]): MenuItem[] {
