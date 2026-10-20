@@ -454,7 +454,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      attach_checkout_session: {
+        Args: { p_order_id: string; p_session_id: string }
+        Returns: undefined
+      }
+      confirm_checkout_payment: {
+        Args: { p_order_id: string; p_session_id: string }
+        Returns: string
+      }
+      create_checkout_order: {
+        Args: { p_earliest_pickup_at: string; p_order: Json }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
