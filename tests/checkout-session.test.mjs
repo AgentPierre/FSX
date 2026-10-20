@@ -14,15 +14,15 @@ function loadModule(path, dependencies) {
   const compiled = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  const module = { exports: {} };
+  const loaded = { exports: {} };
   const wrapper = vm.runInNewContext(`(function(require, module, exports) { ${compiled}\n})`, {
     process, console: { error() {} },
   });
   wrapper((name) => {
     if (!(name in dependencies)) throw new Error(`Unexpected dependency: ${name}`);
     return dependencies[name];
-  }, module, module.exports);
-  return module.exports;
+  }, loaded, loaded.exports);
+  return loaded.exports;
 }
 
 const next = require("next/server");
