@@ -1,8 +1,9 @@
 # API Contract (T25)
 
-Status: **draft against in-memory stubs.** The schema is not approved until 12 Oct; every route
-reads and writes through the `DataStore` interface in `lib/data/store.ts`, so swapping the stub for
-Supabase changes one file. Covers RTM F3–F6, F8–F13 and F16 at the API level. F14 (confirmation
+Status: **Supabase-backed implementation; acceptance testing in progress.** The T23 tables/menu
+and T25 transactional checkout RPCs are deployed. Every route uses the `DataStore` interface in
+`lib/data/store.ts`; Supabase is the default and `FSX_DATA_SOURCE=stub` selects local-only fixtures.
+Covers RTM F3–F6, F8–F13 and F16 at the API level. F14 (confirmation
 number) is covered by `POST /api/orders` returning the order number and the `/order/[id]` page
 showing it (T30). F15 (kitchen view within 5 seconds) and F17–F30 are not covered.
 
@@ -19,11 +20,28 @@ Conventions
   (no email, phone, money or Stripe ids), owner = `OwnerOrder`. Defined in `lib/views.ts` and
   `lib/public-order.ts`. Never return a raw `Order`.
 
-## GET menu (not an HTTP route)
+## GET /api/menu
 
-`getMenu()` in `lib/data`, called from the server component at `/menu`. Returns categories ordered by
+Public, read-only. Returns `200 { "categories": MenuCategory[] }`, categories ordered by
 `sortOrder`, each with items (`isActive` only), each with sizes (price in cents on the size row).
 Unsized items have one size named `regular`. `isAvailable=false` items are returned flagged so the UI can show "sold out".
+`Cache-Control: no-store` keeps prices and availability fresh. Database failures return the standard
+error envelope with `503 database_unavailable`, never silently substitute fixture data. The `/menu`
+server component can still call `getMenu()` directly; a server component does not need to make an
+HTTP request to its own application.
+
+## GET /api/users/me
+
+Returns `200 { "role": "staff" }` or `200 { "role": "owner" }` for the currently signed-in team
+account. Supabase Auth verifies the user, then `staff_users` supplies that user's role. No names,
+email addresses, tokens or other users are returned. `Cache-Control: private, no-store` applies to
+success and error responses. Errors: `401 unauthenticated`, `403 forbidden` for an unprovisioned
+account, `503 auth_unavailable` if role lookup fails. Live mode ignores `x-stub-role`.
+
+This is not a user-management API. Login/logout use Supabase Auth; trusted administrators provision
+roles as described in [Supabase connection setup](supabase-connection.md#provisioning-temporary-test-accounts).
+Public signup, user lists and client-side role assignment are not supported. Jose owns login UI
+styling/accessibility under SCRUM-72.
 
 ## POST /api/orders
 
@@ -40,21 +58,22 @@ Request
   },
   "pickupTime": "2026-10-20T18:30:00Z",
   "lines": [
-    { "sizeId": "sz_r1_lg", "quantity": 1, "spicy": false, "instructions": "" },
-    { "sizeId": "sz_g1", "quantity": 1, "components": ["G2", "G5"] }
+    { "sizeId": "<R1-large-size-id-from-menu>", "quantity": 1, "spicy": false, "instructions": "" },
+    { "sizeId": "<G1-size-id-from-menu>", "quantity": 1, "components": ["G2", "G5"] }
   ]
 }
 ```
 
 - `customer.name` and `customer.email` required; `phone` optional (RTM F8 correction pending).
-- `components` required for G1 (exactly two codes from G2–G10, repeats allowed), forbidden elsewhere.
+- `sizeId` comes from `/api/menu`; live IDs are UUIDs, while local fixtures use their own IDs.
+- `components` required for G1 (exactly two codes from G2–G6, G9, G10, repeats allowed), forbidden elsewhere. G7/G8 do not exist.
 - `quantity` 1–50. `instructions` max 200 chars.
 
 Server steps: validate → check business hours → recompute prices → lead time = max of lines
 (15 min regular, 40 min catering) → `pickupTime` must be ≥ now + lead and inside that day's hours →
 insert order → create Stripe session (`client_reference_id` = order id) → store session id.
 
-201 response
+201 response, with `Location: /api/orders/{orderId}` and `Cache-Control: no-store`:
 
 ```json
 {
@@ -83,6 +102,7 @@ Reads the **raw** body, verifies `Stripe-Signature` with `STRIPE_WEBHOOK_SECRET`
   the Stripe test account) are ignored with `200`.
 - Order not found → `500 order_not_found`, so Stripe retries (up to 3 days) instead of the payment being lost.
 - `amount_total` ≠ order total → **not** marked paid; logged, `200` (a retry would not help).
+- Currency must be `usd`. A missing saved session association returns `503 checkout_not_ready` so Stripe retries.
 - `checkout.session.expired` (customer left checkout; sessions last 31 minutes) → the order whose saved
   session matches is set to `expired`. A paid order is never touched.
 - `checkout.session.async_payment_failed` → logged; order stays `pending_payment`.
@@ -134,17 +154,43 @@ sets `completed`. `cancelled` is allowed from `received`, `in_progress`, `ready`
 Errors: `400 invalid_request`, `401 unauthenticated`, `403 forbidden` (a kitchen user asking for `cancelled`),
 `404 not_found`, `409 invalid_transition` (details.from/to/allowed), `409 not_paid`.
 
-Auth is stubbed (`lib/auth.ts`): a dev-only `x-stub-role: staff|owner` header, **refused in production**.
-Replaced by Supabase Auth + `staff_users.role` once the schema lands.
+Live Auth verifies Supabase users and reads `staff_users.role`. Ticket writes use the signed-in
+session so RLS and audit attribution enforce owner-only cancellation. In explicitly selected local
+stub mode only, `x-stub-role: staff|owner` is accepted. Stub mode is refused in production.
 
 ## POST /api/dev/seed (development only)
 
 Fills the in-memory stub with five paid orders in different ticket states so the kitchen board and owner pages
-can be built without Stripe. Returns `404` in production. Delete when the Supabase store replaces the stub.
+can be built without Stripe. Returns `404` in production and whenever Supabase mode is selected.
+Set `FSX_DATA_SOURCE=stub` locally to use it; it cannot insert demo rows in the live database.
 
 ## Open questions
 
-- Order-number format (daily sequence vs short code) — ERD decision.
+- Order-number format is confirmed: a running number displayed as `#0042`, unique for all time; gaps are normal.
 - Sold-out at item vs size level — modelled at item level for now.
 - Email on `ready` (Resend or similar) — not part of this contract until the dependency is approved.
 - Request validation uses `zod` (approved by the dev lead as a new dependency, 7 Oct).
+
+## Design notes for SCRUM-64
+
+The [Microsoft API design guidance](https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design)
+informs the resource URLs, HTTP methods, creation response and bounded history pagination here.
+`POST /api/orders` creates a resource and returns 201 with its URI in `Location`; `GET` reads
+resources without changing them; `PATCH` changes the ticket-status part of an existing order.
+The existing error envelope is retained so teammates do not have to rewrite their clients.
+
+Validate at trust boundaries: browser input is untrusted, the service recomputes prices and checks
+business rules, and the database transaction rechecks authoritative rows before saving the whole
+order. Authentication establishes identity; authorization checks the role's allowed actions.
+Responses use audience-specific projections instead of exposing raw database rows.
+
+A transaction cannot include a remote Stripe request. Session expiry after a failed attachment is
+a compensating action: it attempts to undo the external side effect. It can also fail, so operations
+must inspect the logged cleanup failure. Stripe webhook retries are a separate idempotency case:
+repeated confirmation of the same saved session must not create duplicate payment/status updates.
+The order-creation POST itself is not guaranteed idempotent across customer retries; Stripe's
+per-order idempotency key does not deduplicate a second request that created a new order.
+
+CI exercises real handlers with external boundaries replaced, plus disposable-database tests for
+transactions/RLS. These checks do not replace the first Stripe test-mode checkout and role checks
+on the dev deployment. Do not mark SCRUM-64 accepted until those checks are recorded.
