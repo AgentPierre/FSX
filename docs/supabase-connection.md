@@ -63,9 +63,9 @@ Sign in through `/login` as each account. Verify the staff account cannot access
 
 ## Application and review
 
-The T25 migration must be reviewed and applied before order creation and payment persistence can use these RPCs. Deployment order is: dry-run and apply menu migrations `20261019000000` and `20261020000000`; merge current `dev` into this branch; dry-run `20261020000443_t25_live_data_store` and have Hiab review its output before a real push; then merge the reviewed PR and run the Stripe test-mode checkout acceptance test. Menu/settings/hours reads work against T23 plus the menu migrations. The T25 migration remains unapplied until Hiab approves that deployment.
+T25 migration `20261020000443_t25_live_data_store` is now deployed after Hiab's review and approval of PR #10 and its dry run. The two menu migrations were applied first, then current `dev` was merged into that branch. Hiab requested the final migration push immediately after merging PR #10; the refreshed dry run still listed only that unchanged migration. Read-only checks confirmed all three invoker RPCs, their service-role-only execution grants, the private sequence, and migration version `20261020000443`. No checkout was simulated by writing payment/order rows directly. The first Stripe test-mode checkout and labelled account acceptance tests are still required.
 
-Table types in `lib/database.types.ts` are generated from the deployed T23 schema; `lib/data/database.ts` adds the reviewed RPC contract until the migration is applied and types can be regenerated. The app's existing routes and response shapes are retained.
+Table and RPC types in `lib/database.types.ts` are regenerated from the deployed schema. `lib/data/database.ts` re-exports those generated types for existing client imports; it no longer maintains a separate handwritten RPC contract.
 
 ## GitHub deployment integration
 
