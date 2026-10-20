@@ -1,6 +1,7 @@
 import { store } from "./data";
 import { ApiError } from "./errors";
 import { earliestPickup, isOpenAt } from "./hours";
+import { allowsSpicy } from "./menu-rules";
 import { taxCents } from "./money";
 import type {
   CreateOrderInput,
@@ -57,6 +58,14 @@ export async function createPendingOrder(
       });
     const { item, size } = hit;
     if (!item.isActive || !item.isAvailable) throw unavailable(item);
+    // Spicy only where the menu allows it; the browser's check is a convenience, this is the rule.
+    if (l.spicy && !allowsSpicy(item.code))
+      throw new ApiError(
+        400,
+        "invalid_request",
+        `${item.name} can't be made spicy.`,
+        { code: item.code },
+      );
     // Nothing on the menu is free. A $0 size is a data error and must never be sold as a line.
     if (size.priceCents <= 0)
       throw new ApiError(
@@ -130,19 +139,22 @@ export async function createPendingOrder(
   );
   const tax = taxCents(subtotalCents, settings.taxRateBps);
 
-  const order = await store.insertOrder({
-    customerName: input.customer.name,
-    customerEmail: input.customer.email,
-    customerPhone: input.customer.phone || null,
-    pickupTime: pickup.toISOString(),
-    paymentStatus: "pending_payment",
-    ticketStatus: null, // an unpaid order never reaches the kitchen
-    subtotalCents,
-    taxCents: tax,
-    totalCents: subtotalCents + tax,
-    taxRateBps: settings.taxRateBps,
-    stripeSessionId: null,
-    lines,
-  }, earliest.toISOString());
+  const order = await store.insertOrder(
+    {
+      customerName: input.customer.name,
+      customerEmail: input.customer.email,
+      customerPhone: input.customer.phone || null,
+      pickupTime: pickup.toISOString(),
+      paymentStatus: "pending_payment",
+      ticketStatus: null, // an unpaid order never reaches the kitchen
+      subtotalCents,
+      taxCents: tax,
+      totalCents: subtotalCents + tax,
+      taxRateBps: settings.taxRateBps,
+      stripeSessionId: null,
+      lines,
+    },
+    earliest.toISOString(),
+  );
   return { order, earliestPickup: earliest };
 }

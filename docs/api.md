@@ -68,6 +68,9 @@ Request
 - `sizeId` comes from `/api/menu`; live IDs are UUIDs, while local fixtures use their own IDs.
 - `components` required for G1 (exactly two codes from G2–G6, G9, G10, repeats allowed), forbidden elsewhere. G7/G8 do not exist.
 - `quantity` 1–50. `instructions` max 200 chars.
+- `spicy: true` is only accepted on G, C and T items and fried rice R1–R6 (including steamed rice); on appetizers
+  (including the wings), soups and drinks the server returns `400 invalid_request` ("… can't be made spicy").
+  The rule lives in `lib/menu-rules.ts`, shared by the cart and the API.
 
 Server steps: validate → check business hours → recompute prices → lead time = max of lines
 (15 min regular, 40 min catering) → `pickupTime` must be ≥ now + lead and inside that day's hours →
