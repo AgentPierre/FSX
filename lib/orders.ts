@@ -143,6 +143,6 @@ export async function createPendingOrder(
     taxRateBps: settings.taxRateBps,
     stripeSessionId: null,
     lines,
-  });
+  }, earliest.toISOString());
   return { order, earliestPickup: earliest };
 }

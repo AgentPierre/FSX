@@ -12,7 +12,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const role = requireRole(request, ["staff", "owner"]);
+    const role = await requireRole(request, ["staff", "owner"]);
     const { id } = await params;
     const { status } = await parseBody(request, ticketPatchSchema);
     if (!isTicketStatus(status)) {
