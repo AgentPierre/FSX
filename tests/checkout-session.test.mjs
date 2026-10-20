@@ -1,32 +1,12 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
-import vm from "node:vm";
-import ts from "typescript";
+import { loadModule } from "./helpers/load-module.mjs";
 
 const require = createRequire(import.meta.url);
 
-// Exercise the actual route without Stripe credentials, a database or a Next dev server.
-// Only its external boundaries are replaced; TypeScript is already a project dependency.
-function loadModule(path, dependencies) {
-  const source = readFileSync(new URL(path, import.meta.url), "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const loaded = { exports: {} };
-  const wrapper = vm.runInNewContext(`(function(require, module, exports) { ${compiled}\n})`, {
-    process, console: { error() {} },
-  });
-  wrapper((name) => {
-    if (!(name in dependencies)) throw new Error(`Unexpected dependency: ${name}`);
-    return dependencies[name];
-  }, loaded, loaded.exports);
-  return loaded.exports;
-}
-
 const next = require("next/server");
-const errors = loadModule("../lib/errors.ts", { "next/server": next });
+const errors = loadModule(new URL("../lib/errors.ts", import.meta.url), { "next/server": next });
 
 function route({ createFails = false, attachFails = false, cleanupFails = false, missingUrl = false } = {}) {
   const calls = [];
@@ -45,7 +25,7 @@ function route({ createFails = false, attachFails = false, cleanupFails = false,
       if (cleanupFails) throw new Error("Cleanup unavailable");
     },
   };
-  const { POST } = loadModule("../app/api/orders/route.ts", {
+  const { POST } = loadModule(new URL("../app/api/orders/route.ts", import.meta.url), {
     "next/server": next,
     "@/lib/data": { store: {
       async setStripeSession() {
@@ -96,6 +76,7 @@ test("successful checkout keeps its attached session payable", async () => {
   const { calls, POST } = route();
   const response = await POST({});
   assert.equal(response.status, 201);
+  assert.equal(response.headers.get("Location"), "/api/orders/order-test");
   assert.equal((await response.json()).checkoutUrl, "https://checkout.stripe.com/test");
   assert.deepEqual(calls, ["create-session", "attach-session"]);
 });

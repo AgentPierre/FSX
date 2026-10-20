@@ -84,7 +84,7 @@ export async function POST(request: Request) {
           totalCents: order.totalCents,
           earliestPickup: earliestPickup.toISOString(),
         },
-        { status: 201 },
+        { status: 201, headers: { Location: `/api/orders/${order.id}`, "Cache-Control": "no-store" } },
       );
     } catch (err) {
       console.error(err);
