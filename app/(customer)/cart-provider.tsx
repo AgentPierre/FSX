@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { createContext, useContext, useEffect, useReducer, useRef, useState } from "react";
-import { CART_STORAGE_KEY, CART_VERSION, cartReducer, cartSubtotalCents, checkoutLines, restoreCart, selectionPayload, validateSelection } from "@/lib/cart";
+import { CART_STORAGE_KEY, cartReducer, cartSubtotalCents, checkoutLines, restoreCart, selectionPayload, validateSelection, persistCart } from "@/lib/cart";
 import type { CartState, CartSelection } from "@/lib/cart";
 import type { BusinessHour, MenuCategory, Settings } from "@/lib/types";
 import { formatCents } from "@/lib/money";
@@ -17,6 +17,7 @@ interface CartContextValue extends CartState {
   remove: (id: string) => void;
   clear: () => void;
   prepareCheckoutLines: () => ReturnType<typeof checkoutLines>;
+  persistForCheckout: () => void;
 }
 const CartContext = createContext<CartContextValue | null>(null);
 
@@ -29,6 +30,8 @@ export function CartProvider({ menu, settings, businessHours, children }: {
   const [state, dispatch] = useReducer(cartReducer, { lines: [], ready: false, message: "" });
   const [storageError, setStorageError] = useState("");
   const restored = useRef(false);
+  const currentState = useRef(state);
+  currentState.current = state;
   useEffect(() => {
     // Restore once. Later server menu refreshes must not replace in-memory edits.
     if (restored.current) return;
@@ -44,7 +47,7 @@ export function CartProvider({ menu, settings, businessHours, children }: {
   useEffect(() => {
     if (!state.ready) return;
     try {
-      sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ version: CART_VERSION, lines: state.lines.map((line) => ({ id: line.id, ...selectionPayload(line) })) }));
+      persistCart(state.lines, sessionStorage);
     } catch {
       setStorageError("Your cart could not be saved. Keep this page open to retain your items.");
     }
@@ -62,6 +65,15 @@ export function CartProvider({ menu, settings, businessHours, children }: {
       prepareCheckoutLines: () => {
         if (!state.ready) throw new Error("Wait for the cart to finish restoring.");
         return checkoutLines(state.lines, menu);
+      },
+      persistForCheckout: () => {
+        try {
+          if (!currentState.current.ready) throw new Error("Cart is still restoring.");
+          persistCart(currentState.current.lines, sessionStorage);
+          setStorageError("");
+        } catch {
+          throw new Error("Your cart cannot safely be preserved while you visit Stripe. Checkout has not opened. Enable browser session storage or try again here; your current cart remains on this page.");
+        }
       },
     }}>
       <div className="border-b bg-white px-4 py-3 text-[#1A3A8F]">

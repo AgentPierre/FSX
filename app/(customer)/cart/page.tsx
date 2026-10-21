@@ -62,6 +62,7 @@ export default function Page() {
               <p className="flex flex-wrap justify-between gap-3 text-xl font-semibold"><span>Subtotal</span><span className="tabular-nums">{cart.subtotalCents === null ? "Price unavailable" : formatCents(cart.subtotalCents)}</span></p>
               <p className="mt-2 text-sm">Tax is excluded. Prices and availability are verified by the server when placing your order.</p>
               <button type="button" className={`${destructiveButton} mt-4`} onClick={() => { cart.clear(); setEditing(null); focusAfterUpdate("continue-browsing"); }}>Clear cart</button>
+              {cart.lines.some((line) => validateSelection(line, cart.menu)) || cart.subtotalCents === null ? <button type="button" disabled className={`${button} ml-3 mt-4`}>Checkout unavailable — review cart</button> : <Link href="/checkout" className={`${button} ml-3 mt-4 inline-flex items-center`}>Checkout</Link>}
             </div>
           </>
         )}

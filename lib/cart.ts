@@ -8,6 +8,17 @@ export const MAX_QUANTITY = 50;
 export type CartSelection = Required<CreateOrderInput["lines"][number]>;
 export interface CartLine extends CartSelection { id: string }
 
+export function serializeCart(lines: CartLine[]): string {
+  return JSON.stringify({ version: CART_VERSION, lines: lines.map((line) => ({ id: line.id, ...selectionPayload(line) })) });
+}
+
+/** Write and read back this exact snapshot, rather than accepting an older saved cart. */
+export function persistCart(lines: CartLine[], storage: Pick<Storage, "getItem" | "setItem">): void {
+  const snapshot = serializeCart(lines);
+  storage.setItem(CART_STORAGE_KEY, snapshot);
+  if (storage.getItem(CART_STORAGE_KEY) !== snapshot) throw new Error("Cart persistence verification failed.");
+}
+
 export interface CartState { lines: CartLine[]; ready: boolean; message: string }
 export type CartAction = { type: "restore"; lines: CartLine[]; message: string }
   | { type: "save"; line: CartLine; menu: MenuCategory[]; editing: boolean }
