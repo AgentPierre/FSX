@@ -17,6 +17,7 @@
   --color-line: #e7dcc8;
   --color-tile: #f1e6d0;
   --color-mustard: #f4b942;
+  --color-sun: #ffd166; /* yellow text on brand-red: 3.5:1, large text only */
 
   /* Staff view: status must never rely on colour alone (each also has a label or position). */
   --color-status-received: #b45309;

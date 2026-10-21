@@ -88,6 +88,10 @@ Look: a printed-menu "sticker" style. Brand red and blue on cream with faint pap
 outlines and hard offset shadows that lift on hover and press on click. Fraunces (soft serif)
 headings, DM Sans body. One light theme only; no dark mode.
 
+Hero: a red band with the headline, lead-time chips and a steaming bowl with crossed chopsticks
+(`components/hero-art.tsx`). Tiles show the item code in big outlined letters until a photo exists.
+Footer: wordmark plus three bold facts (address, pickup only, hours). No small print.
+
 Menu page: one category at a time (tab bar stays pinned; the choice is kept in the URL as
 `#category-<id>`), a grid of tiles (2 per row on phones, up to 4 on desktop), and a bottom-sheet /
 centred card for adding an item: size chips, combo half-order chips, spicy switch, optional note,

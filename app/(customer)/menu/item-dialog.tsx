@@ -27,7 +27,7 @@ export function ItemDialog({ item, tone, onClose }: { item: MenuItem; tone: numb
       className="sheet m-auto w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-[2rem] border-2 border-ink bg-cream p-0 text-ink shadow-[0_-6px_0_0_var(--color-ink)] max-sm:mb-0 max-sm:max-h-[92dvh] max-sm:max-w-none sm:max-h-[88dvh] sm:rounded-[2rem] sm:shadow-[8px_8px_0_0_var(--color-ink)]"
     >
       <div className="relative">
-        <MenuThumb code={item.code} tone={tone} className="h-36 w-full sm:h-44" />
+        <MenuThumb code={item.code} tone={tone} size="sheet" className="h-36 w-full border-b-2 border-ink sm:h-44" />
         <button type="button" onClick={() => ref.current?.close()} aria-label="Close" className="sticker absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-paper text-2xl font-bold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue">×</button>
       </div>
       <div className="px-5 pb-0 pt-4">

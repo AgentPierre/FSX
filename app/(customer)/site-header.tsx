@@ -36,7 +36,7 @@ export function SiteHeader({ businessHours, ready, count, subtotalLabel, message
 
   return (
     <div className="border-b-2 border-ink bg-paper">
-      <nav aria-label="Ordering navigation" className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
+      <nav aria-label="Ordering navigation" className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
         <Link href="/menu" className="rounded whitespace-nowrap font-heading text-lg font-black tracking-tight text-brand-red focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:text-2xl">
           Menciu&apos;s Chopstix
         </Link>
@@ -55,7 +55,7 @@ export function SiteHeader({ businessHours, ready, count, subtotalLabel, message
           </Link>
         </div>
       </nav>
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <p role="status" className="sr-only">{message && `${message} ${count} items, subtotal ${subtotalLabel}.`}</p>
         {invalidLines && <p role="alert" className="py-1 text-sm text-ink">Some cart selections are no longer available. Review your cart before placing an order.</p>}
         {storageError && <p role="alert" className="py-1 text-sm text-ink">{storageError}</p>}

@@ -30,7 +30,7 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
         {!canOrder && <p className="mt-1 text-sm font-bold text-muted">Sold out</p>}
         {item.description && <p className="mt-1 line-clamp-2 text-xs text-muted sm:text-sm">{item.description}</p>}
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
-          <p className="font-bold tabular-nums text-brand-red sm:text-lg">
+          <p className="text-lg font-bold tabular-nums leading-tight text-brand-red sm:text-2xl">
             {multiSize && <span className="block text-xs font-medium text-muted">from</span>}
             {formatCents(lowest)}
           </p>

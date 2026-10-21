@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "../cart-provider";
 import { MenuItemCard } from "./menu-item-card";
-import { businessHoursLabel } from "@/lib/menu-display";
+import { HeroArt } from "@/components/hero-art";
 import { formatCents } from "@/lib/money";
 
 export default function Page() {
   // The layout's server-fetched snapshot also drives customization and cart prices.
-  const { menu, settings, businessHours, lines, ready, subtotalCents } = useCart();
+  const { menu, settings, lines, ready, subtotalCents } = useCart();
   const categories = menu
     .map((category) => ({ ...category, items: category.items.filter((item) => item.isActive) }))
     .filter((category) => category.items.length > 0)
@@ -34,24 +34,30 @@ export default function Page() {
   return (
     <main className="min-h-screen pb-24 sm:pb-0">
       <a href="#menu-items" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-30 focus:rounded focus:bg-white focus:p-4 focus:text-brand-blue focus:outline-2 focus:outline-offset-2">Skip to menu</a>
-      <header className="mx-auto max-w-5xl px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
-        <h1 className="text-4xl font-black leading-[0.95] tracking-tight text-brand-blue sm:text-6xl">
-          Order for <span className="text-brand-red italic">pickup</span>
-        </h1>
-        <ul className="mt-4 flex flex-wrap gap-2 text-sm font-semibold">
-          <li className="rounded-full border-2 border-ink bg-paper px-3 py-1">6755 Hillcroft St, Houston</li>
-          <li className="rounded-full border-2 border-ink bg-mustard px-3 py-1">{settings ? `Ready in ${settings.leadRegularMinutes}+ min` : "Pickup only"}</li>
-          {settings && <li className="rounded-full border-2 border-ink bg-paper px-3 py-1">Catering trays: {settings.leadCateringMinutes}+ min</li>}
-        </ul>
-        <p className="mt-3 max-w-3xl text-sm text-muted">
-          {businessHours ? businessHoursLabel(businessHours) : "Business hours are currently unavailable. Please refresh the page."}
-          {" · "}Most entrées can be made spicy. Mixed orders take the longer lead time.
-          {!settings && " Pickup lead times are currently unavailable. Please refresh the page."}
-        </p>
+      <header className="overflow-hidden border-b-2 border-ink bg-brand-red">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-6 sm:px-6 sm:py-10">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-white sm:text-sm">Family kitchen · 6755 Hillcroft St, Houston</p>
+            <h1 className="mt-2 text-[2.5rem] font-black leading-[0.95] tracking-tight text-white sm:text-7xl">
+              Order for <span className="italic text-sun">pickup</span>
+            </h1>
+            <ul className="mt-4 flex flex-wrap gap-2 text-sm font-bold text-ink sm:mt-5 sm:gap-2.5 sm:text-base">
+              {settings ? (
+                <>
+                  <li className="rounded-full border-2 border-ink bg-mustard px-3 py-0.5 sm:px-4 sm:py-1">Ready in {settings.leadRegularMinutes}+ min</li>
+                  <li className="rounded-full border-2 border-ink bg-white px-3 py-0.5 sm:px-4 sm:py-1">Catering trays: {settings.leadCateringMinutes}+ min</li>
+                </>
+              ) : (
+                <li className="rounded-full border-2 border-ink bg-white px-3 py-0.5 sm:px-4 sm:py-1">Pickup lead times are unavailable. Refresh the page.</li>
+              )}
+            </ul>
+          </div>
+          <HeroArt className="w-24 shrink-0 sm:w-72" />
+        </div>
       </header>
       {categories.length > 0 && (
         <nav aria-label="Menu categories" className="sticky top-0 z-10 border-y-2 border-ink bg-cream/95 backdrop-blur-sm">
-          <ul className="mx-auto flex max-w-5xl gap-2 overflow-x-auto px-4 py-3 sm:px-6">
+          <ul className="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 py-3 sm:px-6">
             {categories.map((category) => {
               const selected = category.id === active?.id;
               return (
@@ -70,7 +76,7 @@ export default function Page() {
           </ul>
         </nav>
       )}
-      <div id="menu-items" ref={panelRef} tabIndex={-1} className="mx-auto max-w-5xl scroll-mt-20 px-4 py-6 sm:px-6">
+      <div id="menu-items" ref={panelRef} tabIndex={-1} className="mx-auto max-w-6xl scroll-mt-20 px-4 py-6 sm:px-6">
         {categories.length === 0 && <p>Our menu is currently unavailable. Please check back soon.</p>}
         {active && (
           <section key={active.id} aria-labelledby="active-category">
