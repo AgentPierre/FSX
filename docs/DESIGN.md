@@ -79,3 +79,25 @@ Ask the sponsor whether an original vector file exists before anyone traces it.
 1. Does the sponsor have the logo as a vector file, or only the printed menu?
 2. Food photography — do we have any? It changes the menu card layout completely.
 3. Heading typeface — pick one and commit; it's the single most identity-defining choice here.
+
+---
+
+## Built foundation (T29, 21 Oct)
+
+Decisions: brand red and blue on cream (from the printed menu), Bricolage Grotesque headings with
+Inter body, and a **list layout** for the menu (thumbnail, code chip, name, description, price,
+Add). One light theme only; no dark mode.
+
+How to use it:
+- **Colours and fonts** live in `app/globals.css` (`@theme`). Use the classes: `bg-cream`, `bg-paper`,
+  `text-ink`, `text-muted`, `text-brand-red`, `text-brand-blue`, `border-line`, `bg-tile`,
+  `font-heading`. Do not paste hex values into components.
+- **Staff status colours** are `bg-status-received`, `bg-status-progress`, `bg-status-ready`,
+  `bg-status-late`. Pair each with a label (never colour alone).
+- **Buttons:** `btnPrimary` (one per screen) and `btnSecondary` from `lib/ui.ts`.
+- **Customer shell:** `app/(customer)/site-header.tsx` (wordmark, open/closed, cart) and
+  `components/site-footer.tsx`. Every customer page gets them from the layout.
+- **Dish photos:** save `public/menu/<code>.jpg` (e.g. `G1.jpg`, landscape, under 300 KB) and add the
+  code to `lib/menu-photos.ts`. Items without a photo show the placeholder tile.
+- Staff and owner screens: same tokens, denser and larger. Build them on `bg-paper`/`bg-ink`
+  with the status colours above.

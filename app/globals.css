@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Design tokens (docs/DESIGN.md). Every colour and font below becomes a Tailwind class:
+ *   bg-cream  text-ink  text-muted  text-brand-red  bg-brand-blue  font-heading  bg-status-ready ...
+ * Contrast checked against WCAG 2.1 AA (4.5:1): brand-red on cream 4.6, muted on cream 5.4,
+ * white on brand-red 5.0, white on brand-blue 10.3.
+ */
+@theme {
+  --color-brand-red: #d32f2f;
+  --color-brand-red-dark: #b91c1c;
+  --color-brand-blue: #1a3a8f;
+  --color-cream: #fdf6ec;
+  --color-paper: #ffffff;
+  --color-ink: #1c1917;
+  --color-muted: #6b6560;
+  --color-line: #e7dcc8;
+  --color-tile: #f1e6d0;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Staff view: status must never rely on colour alone (each also has a label or position). */
+  --color-status-received: #b45309;
+  --color-status-progress: #1d4ed8;
+  --color-status-ready: #15803d;
+  --color-status-late: #b91c1c;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-body), system-ui, sans-serif;
+  --font-heading: var(--font-display), var(--font-body), system-ui, sans-serif;
+  --radius-card: 0.75rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+}
+
+/* Prices and timers line up in columns. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

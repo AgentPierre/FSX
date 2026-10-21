@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { createContext, useContext, useEffect, useReducer, useRef, useState } from "react";
 import { CART_STORAGE_KEY, CART_VERSION, cartReducer, cartSubtotalCents, checkoutLines, restoreCart, selectionPayload, validateSelection } from "@/lib/cart";
 import type { CartState, CartSelection } from "@/lib/cart";
 import type { BusinessHour, MenuCategory, Settings } from "@/lib/types";
 import { formatCents } from "@/lib/money";
+import { SiteHeader } from "./site-header";
 
 interface CartContextValue extends CartState {
   menu: MenuCategory[];
@@ -64,15 +64,8 @@ export function CartProvider({ menu, settings, businessHours, children }: {
         return checkoutLines(state.lines, menu);
       },
     }}>
-      <div className="border-b bg-white px-4 py-3 text-[#1A3A8F]">
-        <nav aria-label="Ordering navigation" className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <Link href="/menu" className="rounded p-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2">Menu</Link>
-          <Link href="/cart" className="rounded p-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2">Cart {state.ready ? `(${count}) · ${subtotalLabel}` : "(loading…)"}</Link>
-        </nav>
-        <p role="status" className="mx-auto max-w-6xl text-sm text-[#1C1917]">{state.message && `${state.message} ${count} items, subtotal ${subtotalLabel}.`}</p>
-        {invalidLines && <p role="alert" className="mx-auto max-w-6xl text-sm text-[#1C1917]">Some cart selections are no longer available. Review your cart before placing an order.</p>}
-        {storageError && <p role="alert" className="mx-auto max-w-6xl text-sm text-[#1C1917]">{storageError}</p>}
-      </div>
+      <SiteHeader businessHours={businessHours} ready={state.ready} count={count} subtotalLabel={subtotalLabel}
+        message={state.message} invalidLines={invalidLines} storageError={storageError} />
       {children}
     </CartContext.Provider>
   );
