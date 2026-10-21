@@ -1,51 +1,95 @@
 "use client";
 
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "../cart-provider";
 import { MenuItemCard } from "./menu-item-card";
 import { businessHoursLabel } from "@/lib/menu-display";
+import { formatCents } from "@/lib/money";
 
 export default function Page() {
   // The layout's server-fetched snapshot also drives customization and cart prices.
-  const { menu, settings, businessHours } = useCart();
+  const { menu, settings, businessHours, lines, ready, subtotalCents } = useCart();
   const categories = menu
     .map((category) => ({ ...category, items: category.items.filter((item) => item.isActive) }))
     .filter((category) => category.items.length > 0)
     .sort((a, b) => a.sortOrder - b.sortOrder);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  // A shared link like /menu#category-<id> opens that category.
+  useEffect(() => {
+    const fromHash = window.location.hash.replace("#category-", "");
+    if (fromHash) setActiveId(fromHash);
+  }, []);
+  const activeIndex = Math.max(0, categories.findIndex((category) => category.id === activeId));
+  const active = categories[activeIndex];
+  function choose(id: string) {
+    setActiveId(id);
+    window.history.replaceState(null, "", `#category-${id}`);
+    // Tabs stay put; if the customer had scrolled down the list, bring the new list to the top.
+    const panel = panelRef.current;
+    if (panel && panel.getBoundingClientRect().top < 0) panel.scrollIntoView({ block: "start" });
+  }
+  const count = lines.reduce((sum, line) => sum + line.quantity, 0);
   return (
-    <main className="min-h-screen">
-      <a href="#menu-categories" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-30 focus:rounded focus:bg-white focus:p-4 focus:text-brand-blue focus:outline-2 focus:outline-offset-2">Skip to menu</a>
-      <header className="mx-auto max-w-3xl px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
-        <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-brand-blue sm:text-5xl">
-          Hungry? <span className="text-brand-red">Order for pickup.</span>
+    <main className="min-h-screen pb-24 sm:pb-0">
+      <a href="#menu-items" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-30 focus:rounded focus:bg-white focus:p-4 focus:text-brand-blue focus:outline-2 focus:outline-offset-2">Skip to menu</a>
+      <header className="mx-auto max-w-5xl px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
+        <h1 className="text-4xl font-black leading-[0.95] tracking-tight text-brand-blue sm:text-6xl">
+          Order for <span className="text-brand-red italic">pickup</span>
         </h1>
-        <p className="mt-3 text-lg">Chinese-American favorites, freshly prepared at 6755 Hillcroft St, Houston.</p>
-        <p className="mt-2 text-sm text-muted">{businessHours ? businessHoursLabel(businessHours) : "Business hours are currently unavailable. Please refresh the page."}</p>
-        <p className="mt-2 text-sm text-muted">Any entrée can be made spicy on request. {settings
-          ? `Regular orders need at least ${settings.leadRegularMinutes} minutes; catering trays need ${settings.leadCateringMinutes} minutes. Mixed orders take the longer lead time.`
-          : "Pickup lead times are currently unavailable. Please refresh the page."}</p>
+        <ul className="mt-4 flex flex-wrap gap-2 text-sm font-semibold">
+          <li className="rounded-full border-2 border-ink bg-paper px-3 py-1">6755 Hillcroft St, Houston</li>
+          <li className="rounded-full border-2 border-ink bg-mustard px-3 py-1">{settings ? `Ready in ${settings.leadRegularMinutes}+ min` : "Pickup only"}</li>
+          {settings && <li className="rounded-full border-2 border-ink bg-paper px-3 py-1">Catering trays: {settings.leadCateringMinutes}+ min</li>}
+        </ul>
+        <p className="mt-3 max-w-3xl text-sm text-muted">
+          {businessHours ? businessHoursLabel(businessHours) : "Business hours are currently unavailable. Please refresh the page."}
+          {" · "}Most entrées can be made spicy. Mixed orders take the longer lead time.
+          {!settings && " Pickup lead times are currently unavailable. Please refresh the page."}
+        </p>
       </header>
       {categories.length > 0 && (
-        <nav aria-label="Menu categories" className="sticky top-0 z-10 border-y-2 border-ink bg-cream">
-          <ul className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-4 sm:px-6">
-            {categories.map((category) => (
-              <li key={category.id} className="shrink-0">
-                <a href={`#category-${category.id}`} className="inline-flex min-h-11 items-center border-b-4 border-transparent px-3 py-2 font-bold text-ink hover:border-brand-red focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-blue">{category.name}</a>
-              </li>
-            ))}
+        <nav aria-label="Menu categories" className="sticky top-0 z-10 border-y-2 border-ink bg-cream/95 backdrop-blur-sm">
+          <ul className="mx-auto flex max-w-5xl gap-2 overflow-x-auto px-4 py-3 sm:px-6">
+            {categories.map((category) => {
+              const selected = category.id === active?.id;
+              return (
+                <li key={category.id} className="shrink-0">
+                  <button
+                    type="button"
+                    aria-current={selected ? "true" : undefined}
+                    onClick={() => choose(category.id)}
+                    className={`min-h-11 rounded-full border-2 border-ink px-4 py-2 text-sm font-bold motion-safe:transition-all motion-safe:duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue sm:text-base ${selected ? "-translate-y-0.5 bg-brand-red text-white shadow-[3px_3px_0_0_var(--color-ink)]" : "bg-paper hover:bg-tile"}`}
+                  >
+                    {category.name}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       )}
-      <div id="menu-categories" tabIndex={-1} className="mx-auto max-w-3xl scroll-mt-24 space-y-10 px-4 py-8 sm:px-6">
+      <div id="menu-items" ref={panelRef} tabIndex={-1} className="mx-auto max-w-5xl scroll-mt-20 px-4 py-6 sm:px-6">
         {categories.length === 0 && <p>Our menu is currently unavailable. Please check back soon.</p>}
-        {categories.map((category) => (
-          <section key={category.id} id={`category-${category.id}`} aria-labelledby={`heading-${category.id}`} className="scroll-mt-24">
-            <h2 id={`heading-${category.id}`} className="border-b-2 border-ink pb-2 text-2xl font-extrabold text-brand-blue">{category.name}</h2>
-            <ul className="divide-y divide-line">
-              {category.items.map((item) => <li key={item.id}><MenuItemCard item={item} /></li>)}
+        {active && (
+          <section key={active.id} aria-labelledby="active-category">
+            <h2 id="active-category" className="mb-4 flex items-baseline gap-3 text-3xl font-black text-brand-blue">
+              {active.name}
+              <span className="font-sans text-sm font-semibold text-muted">{active.items.length} {active.items.length === 1 ? "item" : "items"}</span>
+            </h2>
+            <ul className="grid grid-cols-2 items-stretch gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+              {active.items.map((item, index) => <li key={item.id}><MenuItemCard item={item} tone={activeIndex} index={index} /></li>)}
             </ul>
           </section>
-        ))}
+        )}
       </div>
+      {ready && count > 0 && (
+        <Link href="/cart" className="sticker anim-pop fixed inset-x-4 bottom-4 z-20 flex min-h-14 items-center justify-between rounded-full bg-brand-blue px-6 font-bold text-white sm:hidden">
+          <span>View cart ({count})</span>
+          <span className="tabular-nums">{subtotalCents === null ? "" : formatCents(subtotalCents)}</span>
+        </Link>
+      )}
     </main>
   );
 }

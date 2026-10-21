@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Inter } from "next/font/google";
+import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 
-// Headings carry the restaurant's personality; body text stays plain and readable (docs/DESIGN.md).
-const display = Bricolage_Grotesque({
+// Fraunces is a soft, slightly quirky serif that feels like a printed menu; DM Sans keeps small text easy to read.
+const display = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
+  axes: ["opsz", "SOFT", "WONK"],
 });
 
-const body = Inter({
+const body = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
 });

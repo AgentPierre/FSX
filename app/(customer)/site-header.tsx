@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { isOpenAt } from "@/lib/hours";
 import type { BusinessHour } from "@/lib/types";
 
-/** Wordmark, open/closed pill and cart link. Also holds the cart's live status messages. */
+/** Wordmark, open/closed pill and cart link. Also announces cart changes (screen reader and a short toast). */
 export function SiteHeader({ businessHours, ready, count, subtotalLabel, message, invalidLines, storageError }: {
   businessHours: BusinessHour[] | null;
   ready: boolean;
@@ -25,29 +25,46 @@ export function SiteHeader({ businessHours, ready, count, subtotalLabel, message
     return () => clearInterval(timer);
   }, [businessHours]);
 
+  // A short visual toast; the same words stay in the screen-reader live region below.
+  const [toast, setToast] = useState(false);
+  useEffect(() => {
+    if (!message) return;
+    setToast(true);
+    const timer = setTimeout(() => setToast(false), 2400);
+    return () => clearTimeout(timer);
+  }, [message, count, subtotalLabel]);
+
   return (
-    <div className="border-b border-line bg-paper">
-      <nav aria-label="Ordering navigation" className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
-        <Link href="/menu" className="rounded font-heading text-xl font-extrabold tracking-tight text-brand-red focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue">
+    <div className="border-b-2 border-ink bg-paper">
+      <nav aria-label="Ordering navigation" className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
+        <Link href="/menu" className="rounded whitespace-nowrap font-heading text-lg font-black tracking-tight text-brand-red focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:text-2xl">
           Menciu&apos;s Chopstix
         </Link>
         <div className="flex items-center gap-3">
           {open !== null && (
-            <span className={`hidden rounded-full px-3 py-1 text-xs font-semibold sm:inline ${open ? "bg-green-100 text-green-900" : "bg-stone-200 text-stone-800"}`}>
+            <span className={`hidden items-center gap-1.5 rounded-full border-2 border-ink px-3 py-1 text-xs font-bold sm:inline-flex ${open ? "bg-[#c6efc9] text-green-950" : "bg-stone-200 text-stone-900"}`}>
+              <span aria-hidden="true" className={`h-2 w-2 rounded-full ${open ? "bg-green-700" : "bg-stone-500"}`} />
               {open ? "Open now" : "Closed now"}
             </span>
           )}
-          <Link href="/cart" className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-blue px-4 font-semibold text-white hover:bg-brand-blue/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue">
+          <Link href="/cart" className="sticker inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-blue px-4 font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue">
             Cart{" "}
-            <span className="tabular-nums">{ready ? `(${count}) · ${subtotalLabel}` : "(loading…)"}</span>
+            <span key={count} className={`whitespace-nowrap tabular-nums ${count > 0 ? "anim-bump inline-block" : ""}`}>
+              {ready ? <>({count})<span className="hidden sm:inline"> · {subtotalLabel}</span></> : "(loading…)"}
+            </span>
           </Link>
         </div>
       </nav>
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <p role="status" className="text-sm text-ink">{message && `${message} ${count} items, subtotal ${subtotalLabel}.`}</p>
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        <p role="status" className="sr-only">{message && `${message} ${count} items, subtotal ${subtotalLabel}.`}</p>
         {invalidLines && <p role="alert" className="py-1 text-sm text-ink">Some cart selections are no longer available. Review your cart before placing an order.</p>}
         {storageError && <p role="alert" className="py-1 text-sm text-ink">{storageError}</p>}
       </div>
+      {toast && message && (
+        <p aria-hidden="true" className="sticker anim-pop pointer-events-none fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-ink px-5 py-3 text-sm font-bold text-white sm:bottom-8">
+          {message.replace(/\.$/, "")} · {count} in cart
+        </p>
+      )}
     </div>
   );
 }
