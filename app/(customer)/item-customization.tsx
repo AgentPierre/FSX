@@ -105,11 +105,12 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
             </label>)}
           </div>
         </fieldset>}
+        {item.code === "G1" && <p className="text-sm font-semibold">Choose exactly two half orders. You may choose the same dish twice.</p>}
         {item.code === "G1" && [0, 1].map((index) => <fieldset key={index}>
           <legend className={label}>Half order {index + 1}</legend>
           <div className="flex flex-wrap gap-2">
             {options.map((option) => <label key={option.id} className="relative">
-              <input type="radio" name={`${id}-half-${index}`} required className="peer sr-only" disabled={!option.isAvailable}
+              <input type="radio" name={`${id}-half-${index}`} className="peer sr-only" disabled={!option.isAvailable}
                 checked={halves[index] === option.code}
                 onChange={() => setHalves((current) => current.map((code, position) => position === index ? option.code : code))} />
               <span className={chip}>{option.name}{!option.isAvailable && " (sold out)"}</span>

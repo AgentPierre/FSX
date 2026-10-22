@@ -65,7 +65,7 @@ export function CartProvider({ menu, settings, businessHours, children }: {
       },
     }}>
       <SiteHeader businessHours={businessHours} ready={state.ready} count={count} subtotalLabel={subtotalLabel}
-        message={state.message} invalidLines={invalidLines} storageError={storageError} />
+        message={state.message} actionKey={state.lines} invalidLines={invalidLines} storageError={storageError} />
       {children}
     </CartContext.Provider>
   );

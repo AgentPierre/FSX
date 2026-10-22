@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { useCart } from "../cart-provider";
 import { MenuItemCard } from "./menu-item-card";
 import { HeroArt } from "@/components/hero-art";
+import { pill } from "@/lib/ui";
+import { OpenPill } from "../open-status";
 import { formatCents } from "@/lib/money";
 
 export default function Page() {
@@ -41,16 +43,17 @@ export default function Page() {
             <h1 className="mt-2 text-[2.5rem] font-black leading-[0.95] tracking-tight text-white sm:text-7xl">
               Order for <span className="italic text-sun">pickup</span>
             </h1>
-            <ul className="mt-4 flex flex-wrap gap-2 text-sm font-bold text-ink sm:mt-5 sm:gap-2.5 sm:text-base">
+            <ul className="mt-4 flex flex-wrap gap-2 text-sm text-ink sm:mt-5 sm:gap-2.5 sm:text-base">
+              <li className="sm:hidden"><OpenPill businessHours={businessHours} /></li>
               {settings ? (
                 <>
-                  <li className="rounded-full border-2 border-ink bg-mustard px-3 py-0.5 sm:px-4 sm:py-1">Ready in {settings.leadRegularMinutes}+ min</li>
-                  <li className="rounded-full border-2 border-ink bg-paper px-3 py-0.5 sm:px-4 sm:py-1">Catering trays: {settings.leadCateringMinutes}+ min</li>
+                  <li className={`${pill} bg-mustard`}>Ready in {settings.leadRegularMinutes}+ min</li>
+                  <li className={`${pill} bg-paper`}>Catering trays: {settings.leadCateringMinutes}+ min</li>
                 </>
               ) : (
-                <li className="rounded-full border-2 border-ink bg-paper px-3 py-0.5 sm:px-4 sm:py-1">Pickup lead times are unavailable. Refresh the page.</li>
+                <li className={`${pill} bg-paper`}>Pickup lead times are unavailable. Refresh the page.</li>
               )}
-              {!businessHours && <li className="rounded-full border-2 border-ink bg-paper px-3 py-0.5 sm:px-4 sm:py-1">Business hours are currently unavailable. Please refresh the page.</li>}
+              {!businessHours && <li className={`${pill} bg-paper`}>Business hours are currently unavailable. Please refresh the page.</li>}
             </ul>
           </div>
           <HeroArt className="w-24 shrink-0 sm:w-72" />

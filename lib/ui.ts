@@ -7,3 +7,6 @@ const base =
 export const btnPrimary = `${base} bg-brand-red text-white`;
 /** Secondary actions (Edit, Cancel). */
 export const btnSecondary = `${base} bg-paper text-ink`;
+
+/** Static info pill (lead times, open/closed). Add a background class (and inline-flex where it is not a list item). */
+export const pill = "rounded-full border-2 border-ink px-3 py-0.5 font-bold sm:px-4 sm:py-1";

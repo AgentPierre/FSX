@@ -11,6 +11,13 @@ export function ItemDialog({ item, tone, onClose }: { item: MenuItem; tone: numb
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const { add, settings } = useCart();
+  const downOutside = useRef(false);
+  const outside = (event: { target: EventTarget; clientX: number; clientY: number }) => {
+    const dialog = ref.current;
+    if (!dialog || event.target !== dialog) return false;
+    const box = dialog.getBoundingClientRect();
+    return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
+  };
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -23,7 +30,10 @@ export function ItemDialog({ item, tone, onClose }: { item: MenuItem; tone: numb
       ref={ref}
       aria-labelledby={titleId}
       onClose={onClose}
-      onClick={(event) => { if (event.target === ref.current) ref.current?.close(); }}
+      // Backdrop click closes. Check the press started AND ended outside the panel, so dragging the
+      // scrollbar or a text selection that ends past the edge does not close it.
+      onPointerDown={(event) => { downOutside.current = outside(event); }}
+      onClick={(event) => { if (downOutside.current && outside(event)) ref.current?.close(); downOutside.current = false; }}
       className="sheet m-auto w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-[2rem] border-2 border-ink bg-cream p-0 text-ink shadow-[0_-6px_0_0_var(--color-ink)] max-sm:mb-0 max-sm:max-h-[92dvh] max-sm:max-w-none sm:max-h-[88dvh] sm:rounded-[2rem] sm:shadow-[8px_8px_0_0_var(--color-ink)]"
     >
       <div className="relative">
@@ -34,7 +44,6 @@ export function ItemDialog({ item, tone, onClose }: { item: MenuItem; tone: numb
         <p className="font-mono text-xs text-muted"><span className="sr-only">Item code </span>{item.code}</p>
         <h2 id={titleId} className="mt-1 text-3xl font-black leading-tight text-brand-blue">{item.name}</h2>
         {item.description && <p className="mt-2 text-muted">{item.description}</p>}
-        {item.code === "G1" && <p className="mt-2 text-sm font-semibold">Choose exactly two half orders. You may choose the same dish twice.</p>}
         {item.isCatering && <p className="mt-2 text-sm font-semibold">{settings ? `Allow at least ${settings.leadCateringMinutes} minutes for pickup.` : "Pickup lead time is currently unavailable."}</p>}
         <div className="mt-5">
           <ItemCustomization item={item} onSave={add} inSheet onAdded={() => ref.current?.close()} />
