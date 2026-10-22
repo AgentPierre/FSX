@@ -9,7 +9,7 @@ import { formatCents } from "@/lib/money";
 
 export default function Page() {
   // The layout's server-fetched snapshot also drives customization and cart prices.
-  const { menu, settings, lines, ready, subtotalCents } = useCart();
+  const { menu, settings, businessHours, lines, ready, subtotalCents } = useCart();
   const categories = menu
     .map((category) => ({ ...category, items: category.items.filter((item) => item.isActive) }))
     .filter((category) => category.items.length > 0)
@@ -33,7 +33,7 @@ export default function Page() {
   const count = lines.reduce((sum, line) => sum + line.quantity, 0);
   return (
     <main className="min-h-screen pb-24 sm:pb-0">
-      <a href="#menu-items" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-30 focus:rounded focus:bg-white focus:p-4 focus:text-brand-blue focus:outline-2 focus:outline-offset-2">Skip to menu</a>
+      <a href="#menu-items" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-30 focus:rounded focus:bg-paper focus:p-4 focus:text-brand-blue focus:outline-2 focus:outline-offset-2">Skip to menu</a>
       <header className="overflow-hidden border-b-2 border-ink bg-brand-red">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-6 sm:px-6 sm:py-10">
           <div className="min-w-0">
@@ -45,11 +45,12 @@ export default function Page() {
               {settings ? (
                 <>
                   <li className="rounded-full border-2 border-ink bg-mustard px-3 py-0.5 sm:px-4 sm:py-1">Ready in {settings.leadRegularMinutes}+ min</li>
-                  <li className="rounded-full border-2 border-ink bg-white px-3 py-0.5 sm:px-4 sm:py-1">Catering trays: {settings.leadCateringMinutes}+ min</li>
+                  <li className="rounded-full border-2 border-ink bg-paper px-3 py-0.5 sm:px-4 sm:py-1">Catering trays: {settings.leadCateringMinutes}+ min</li>
                 </>
               ) : (
-                <li className="rounded-full border-2 border-ink bg-white px-3 py-0.5 sm:px-4 sm:py-1">Pickup lead times are unavailable. Refresh the page.</li>
+                <li className="rounded-full border-2 border-ink bg-paper px-3 py-0.5 sm:px-4 sm:py-1">Pickup lead times are unavailable. Refresh the page.</li>
               )}
+              {!businessHours && <li className="rounded-full border-2 border-ink bg-paper px-3 py-0.5 sm:px-4 sm:py-1">Business hours are currently unavailable. Please refresh the page.</li>}
             </ul>
           </div>
           <HeroArt className="w-24 shrink-0 sm:w-72" />

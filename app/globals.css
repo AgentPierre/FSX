@@ -19,6 +19,17 @@
   --color-mustard: #f4b942;
   --color-sun: #ffd166; /* yellow text on brand-red: 3.5:1, large text only */
 
+  /* Placeholder tiles (one tint per category, with a darker outline colour for the item code). */
+  --color-tile-ink: #8a6a2f;
+  --color-tile-red: #f9d9d3;
+  --color-tile-blue: #dbe3f6;
+  --color-tile-yellow: #fbe5b0;
+  --color-tile-yellow-ink: #7a5200;
+
+  /* Open/closed pill in the header: dark text on a light green, 11:1. */
+  --color-open: #c6efc9;
+  --color-open-ink: #0f3d14;
+
   /* Staff view: status must never rely on colour alone (each also has a label or position). */
   --color-status-received: #b45309;
   --color-status-progress: #1d4ed8;

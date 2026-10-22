@@ -9,7 +9,7 @@ export function SiteFooter({ businessHours }: { businessHours: BusinessHour[] | 
         <ul className="flex flex-wrap gap-x-8 gap-y-2 text-lg font-bold text-ink">
           <li>6755 Hillcroft St, Houston</li>
           <li>Pickup only</li>
-          {businessHours && <li>{businessHoursLabel(businessHours)}</li>}
+          <li>{businessHours ? businessHoursLabel(businessHours) : "Business hours are currently unavailable. Please refresh the page."}</li>
         </ul>
       </div>
     </footer>

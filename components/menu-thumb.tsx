@@ -2,10 +2,10 @@ import { MENU_PHOTOS } from "@/lib/menu-photos";
 
 // Placeholder tiles rotate through four warm tints by category so a page of cards isn't one flat colour.
 const TONES = [
-  { bg: "#f1e6d0", ink: "#8a6a2f" },
-  { bg: "#f9d9d3", ink: "#b91c1c" },
-  { bg: "#dbe3f6", ink: "#1a3a8f" },
-  { bg: "#fbe5b0", ink: "#7a5200" },
+  { bg: "var(--color-tile)", ink: "var(--color-tile-ink)" },
+  { bg: "var(--color-tile-red)", ink: "var(--color-brand-red-dark)" },
+  { bg: "var(--color-tile-blue)", ink: "var(--color-brand-blue)" },
+  { bg: "var(--color-tile-yellow)", ink: "var(--color-tile-yellow-ink)" },
 ];
 
 /**

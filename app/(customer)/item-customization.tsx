@@ -59,6 +59,14 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
   }, []);
   const formRef = useRef<HTMLFormElement>(null);
+  // "Add a note" swaps the button for the text box; move focus there so keyboard users land in it.
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+  const focusNote = useRef(false);
+  useEffect(() => {
+    if (!noteOpen || !focusNote.current) return;
+    focusNote.current = false;
+    noteRef.current?.focus();
+  }, [noteOpen]);
   useEffect(() => {
     if (!focusOnMount) return;
     // Only an explicitly opened editor moves focus; ordinary cart updates do not.
@@ -111,14 +119,14 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
         {supportsSpicy(item) && <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-2xl border-2 border-ink bg-paper px-4">
           <span className="font-semibold">Make it spicy</span>
           <input type="checkbox" role="switch" checked={spicy} onChange={(event) => setSpicy(event.target.checked)} className="peer sr-only" />
-          <span aria-hidden="true" className="relative h-7 w-12 shrink-0 rounded-full border-2 border-ink bg-tile motion-safe:transition-colors peer-checked:bg-brand-red peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-blue after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border-2 after:border-ink after:bg-white after:transition-transform peer-checked:after:translate-x-5" />
+          <span aria-hidden="true" className="relative h-7 w-12 shrink-0 rounded-full border-2 border-ink bg-tile motion-safe:transition-colors peer-checked:bg-brand-red peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-blue after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border-2 after:border-ink after:bg-paper after:transition-transform peer-checked:after:translate-x-5" />
         </label>}
         {noteOpen ? <div>
           <label htmlFor={`${id}-instructions`} className={`block ${label}`}>Note for the kitchen</label>
-          <textarea id={`${id}-instructions`} value={instructions} maxLength={200} rows={2} placeholder="No onions, extra sauce…" aria-describedby={`${id}-hint`}
+          <textarea ref={noteRef} id={`${id}-instructions`} value={instructions} maxLength={200} rows={2} placeholder="No onions, extra sauce…" aria-describedby={`${id}-hint`}
             className="block w-full rounded-2xl border-2 border-ink bg-paper p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue" onChange={(event) => setInstructions(event.target.value)} />
           <p id={`${id}-hint`} className="mt-1 text-right text-xs text-muted">{instructions.length}/200</p>
-        </div> : <button type="button" onClick={() => setNoteOpen(true)} className="inline-flex min-h-11 items-center gap-2 rounded-full px-1 font-semibold text-brand-blue underline decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue">
+        </div> : <button type="button" onClick={() => { focusNote.current = true; setNoteOpen(true); }} className="inline-flex min-h-11 items-center gap-2 rounded-full px-1 font-semibold text-brand-blue underline decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue">
           <span aria-hidden="true">+</span> Add a note for the kitchen
         </button>}
       </fieldset>
