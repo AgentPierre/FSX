@@ -6,7 +6,6 @@ import { useCart } from "../cart-provider";
 import { MenuItemCard } from "./menu-item-card";
 import { HeroArt } from "@/components/hero-art";
 import { pill } from "@/lib/ui";
-import { OpenPill } from "../open-status";
 import { formatCents } from "@/lib/money";
 
 export default function Page() {
@@ -44,7 +43,6 @@ export default function Page() {
               Order for <span className="italic text-sun">pickup</span>
             </h1>
             <ul className="mt-4 flex flex-wrap gap-2 text-sm text-ink sm:mt-5 sm:gap-2.5 sm:text-base">
-              <li className="sm:hidden"><OpenPill businessHours={businessHours} /></li>
               {settings ? (
                 <>
                   <li className={`${pill} bg-mustard`}>Ready in {settings.leadRegularMinutes}+ min</li>

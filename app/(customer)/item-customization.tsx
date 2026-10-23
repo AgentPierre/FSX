@@ -140,7 +140,7 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
         </div>
         <button type="submit" disabled={disabled} className={`${btnPrimary} min-w-0 flex-1`}>
           {initial ? "Save changes" : added ? "Added ✓" : "Add to cart"}
-          {total && <span className="rounded-full bg-black/20 px-2 py-0.5 tabular-nums">{total}</span>}
+          {total && <span className="rounded-full bg-ink/20 px-2 py-0.5 tabular-nums">{total}</span>}
         </button>
         {onCancel && <button type="button" onClick={onCancel} className={`${btnSecondary} w-full`}>Cancel editing</button>}
       </div>

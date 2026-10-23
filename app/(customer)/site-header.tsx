@@ -44,6 +44,7 @@ export function SiteHeader({ businessHours, ready, count, subtotalLabel, message
         </div>
       </nav>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="pb-2 sm:hidden"><OpenPill businessHours={businessHours} className="text-xs" /></div>
         <p role="status" className="sr-only">{message && `${message} ${count} items, subtotal ${subtotalLabel}.`}</p>
         {invalidLines && <p role="alert" className="py-1 text-sm text-ink">Some cart selections are no longer available. Review your cart before placing an order.</p>}
         {storageError && <p role="alert" className="py-1 text-sm text-ink">{storageError}</p>}

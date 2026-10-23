@@ -44,7 +44,7 @@
 body {
   background-color: var(--color-cream);
   /* Faint paper dots, like the printed menu. */
-  background-image: radial-gradient(rgb(28 25 23 / 0.07) 1px, transparent 1px);
+  background-image: radial-gradient(color-mix(in srgb, var(--color-ink) 7%, transparent) 1px, transparent 1px);
   background-size: 20px 20px;
   color: var(--color-ink);
   font-family: var(--font-sans);
@@ -145,7 +145,7 @@ dialog.sheet[open] {
   animation: sheet 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 dialog.sheet::backdrop {
-  background: rgb(28 25 23 / 0.55);
+  background: color-mix(in srgb, var(--color-ink) 55%, transparent);
   animation: fade 200ms ease-out;
 }
 @media (min-width: 640px) {

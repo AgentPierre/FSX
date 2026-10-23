@@ -25,8 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${display.variable} ${body.variable} antialiased`}>
+    // The font variable classes go on <html> so the theme font aliases in globals.css can see them.
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
+      <body className="antialiased">
         {children}
       </body>
     </html>
