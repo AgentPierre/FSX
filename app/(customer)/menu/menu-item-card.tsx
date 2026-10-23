@@ -99,7 +99,7 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
                 <button type="button" onClick={minus} aria-label={`Remove one ${item.name}`} className={`${stepButton} enabled:hover:bg-tile`}>
                   <span aria-hidden="true">−</span>
                 </button>
-                <output aria-live="polite" className="relative z-10 min-w-7 text-center text-lg font-bold tabular-nums">{quantity}</output>
+                <output className="relative z-10 min-w-7 text-center text-lg font-bold tabular-nums">{quantity}</output>
               </>
             )}
             <button

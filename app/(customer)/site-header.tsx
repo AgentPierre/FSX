@@ -54,7 +54,7 @@ export function SiteHeader({ businessHours, ready, count, subtotalLabel, message
                 </span>
               )}
             </span>
-            <span className="whitespace-nowrap tabular-nums" aria-hidden="true">{ready ? subtotalLabel : "…"}</span>
+            <span className="whitespace-nowrap tabular-nums" aria-hidden="true">{ready ? (subtotalLabel.startsWith("$") ? subtotalLabel : "—") : "…"}</span>
           </Link>
         </div>
       </nav>

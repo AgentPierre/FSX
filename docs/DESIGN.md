@@ -93,9 +93,23 @@ Hero: a red band with the headline, lead-time chips and a steaming bowl with cro
 Footer: wordmark plus three bold facts (address, pickup only, hours). No small print.
 
 Menu page: one category at a time (tab bar stays pinned; the choice is kept in the URL as
-`#category-<id>`), a grid of tiles (2 per row on phones, up to 4 on desktop), and a bottom-sheet /
-centred card for adding an item: size chips, combo half-order chips, spicy switch, optional note,
-plus/minus quantity and an Add button that shows the line total. A floating cart bar shows on phones.
+`#category-<id>`; each tab shows how many items from that category are in the cart), and a grid of
+tiles (2 per row on phones, up to 4 on desktop).
+
+Adding to the cart:
+- **Plus adds one straight away, no pop-up.** Once an item is in the cart the tile shows a count
+  badge and a minus / count / plus control. Plus and minus act on the item's most recent cart line.
+- **Taking out the last one asks first:** minus on a quantity of 1 opens "Remove it?" (Keep it / Remove).
+- **Items that need a choice** (anything with sizes, and the Combination Plate) open the options sheet
+  on the first plus. Tapping a tile's name opens the same sheet for any item: size chips, combo
+  half-order chips, spicy switch, optional note, plus/minus quantity, and an Add button with the line
+  total. Adding something identical to a line already in the cart raises that line's quantity.
+- Header cart is a cart icon with an item-count badge plus the running subtotal. A floating cart bar
+  also shows on phones.
+
+Logo: the restaurant's cat-and-ramen mark is the favicon and Apple touch icon (`app/icon.png`,
+`app/apple-icon.png`) and sits beside the wordmark in the header and footer
+(`public/brand/chopstix-mark.webp`).
 
 How to use it:
 - **Colours and fonts** live in `app/globals.css` (`@theme`). Use the classes: `bg-cream`, `bg-paper`,

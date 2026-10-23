@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { menuItems, supportsSpicy, validateSelection } from "@/lib/cart";
-import type { CartSelection } from "@/lib/cart";
+import { menuItems, sameSelection, supportsSpicy, validateSelection } from "@/lib/cart";
+import type { CartLine, CartSelection } from "@/lib/cart";
 import type { MenuItem } from "@/lib/types";
 import { formatCents } from "@/lib/money";
 import { useCart } from "./cart-provider";
 import { sizeLabel } from "@/lib/menu-display";
 import { btnPrimary, btnSecondary } from "@/lib/ui";
+
+/** How many of exactly this selection (same size and options) are already in the cart. */
+function quantityOfSelection(lines: CartLine[], selection: CartSelection): number {
+  return lines.filter((line) => sameSelection(line, selection)).reduce((sum, line) => sum + line.quantity, 0);
+}
 
 const chip =
   "inline-flex min-h-11 cursor-pointer items-center rounded-full border-2 border-ink bg-paper px-4 py-1.5 text-sm font-semibold motion-safe:transition-colors peer-checked:bg-brand-blue peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-blue peer-disabled:cursor-not-allowed peer-disabled:opacity-50";
@@ -35,19 +40,14 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
   const [halves, setHalves] = useState(initial?.components ?? ["", ""]);
   const [error, setError] = useState("");
   const [added, setAdded] = useState(false);
-  const pendingAdd = useRef<{ ids: Set<string>; selection: CartSelection } | null>(null);
+  const pendingAdd = useRef<{ before: number; selection: CartSelection } | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onAddedRef = useRef(onAdded);
   useEffect(() => { onAddedRef.current = onAdded; });
   useEffect(() => {
     const pending = pendingAdd.current;
     if (!pending) return;
-    const accepted = lines.some((line) => !pending.ids.has(line.id)
-      && line.sizeId === pending.selection.sizeId
-      && line.quantity === pending.selection.quantity
-      && line.spicy === pending.selection.spicy
-      && line.instructions === pending.selection.instructions
-      && JSON.stringify(line.components) === JSON.stringify(pending.selection.components));
+    const accepted = quantityOfSelection(lines, pending.selection) === pending.before + pending.selection.quantity;
     if (!accepted) return;
     pendingAdd.current = null;
     setAdded(true);
@@ -90,7 +90,7 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
       const problem = validateSelection(selection, menu) ?? (!initial && lines.length >= 30 ? "Cart can contain at most 30 lines." : null);
       if (problem) { setError(problem); return; }
       // Confirm the new line in context before displaying success.
-      if (!initial) pendingAdd.current = { ids: new Set(lines.map((line) => line.id)), selection };
+      if (!initial) pendingAdd.current = { before: quantityOfSelection(lines, selection), selection };
       onSave(selection);
       setError("");
     }}>

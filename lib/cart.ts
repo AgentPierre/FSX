@@ -13,6 +13,12 @@ export type CartAction = { type: "restore"; lines: CartLine[]; message: string }
   | { type: "save"; line: CartLine; menu: MenuCategory[]; editing: boolean }
   | { type: "remove"; id: string } | { type: "clear" };
 
+/** Same dish with the same options: size, spicy, note and half orders. */
+export function sameSelection(a: CartSelection, b: CartSelection): boolean {
+  return a.sizeId === b.sizeId && a.spicy === b.spicy && a.instructions === b.instructions
+    && a.components.length === b.components.length && a.components.every((code, i) => code === b.components[i]);
+}
+
 export function cartReducer(state: CartState, action: CartAction): CartState {
   if (action.type === "restore") return { lines: action.lines, ready: true, message: action.message };
   if (!state.ready) return state;
@@ -21,6 +27,14 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
   const error = validateSelection(action.line, action.menu);
   if (error) return { ...state, message: error };
   if (action.editing && !state.lines.some((line) => line.id === action.line.id)) return { ...state, message: "This cart item no longer exists." };
+  if (!action.editing) {
+    const same = state.lines.find((line) => sameSelection(line, action.line));
+    if (same) {
+      const quantity = same.quantity + action.line.quantity;
+      if (quantity > MAX_QUANTITY) return { ...state, message: "Quantity must be between 1 and 50." };
+      return { ...state, lines: state.lines.map((line) => line === same ? { ...line, quantity } : line), message: "Item added to cart." };
+    }
+  }
   if (!action.editing && state.lines.length >= MAX_LINES) return { ...state, message: "Cart can contain at most 30 lines." };
   return { ...state, lines: action.editing ? state.lines.map((line) => line.id === action.line.id ? action.line : line) : [...state.lines, action.line], message: action.editing ? "Cart item updated." : "Item added to cart." };
 }
