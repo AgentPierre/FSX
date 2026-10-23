@@ -30,9 +30,10 @@ export function saveLastOrder(order: { id: string; orderNumber: string }): void 
   }
 }
 
-export function clearLastOrder(): void {
+/** Forgets the remembered order, but only if it is `id`: finishing an old order must not drop a newer one. */
+export function clearLastOrder(id: string): void {
   try {
-    localStorage.removeItem(KEY);
+    if (parseLastOrder(localStorage.getItem(KEY), Date.now())?.id === id) localStorage.removeItem(KEY);
   } catch {
     // Nothing to clear if storage is blocked.
   }

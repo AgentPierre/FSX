@@ -25,3 +25,8 @@ test("returns null when there is no warning", () => {
 test("does not treat a negative statement as a warning", () => {
   assert.equal(allergenNotice("Does not contain peanuts."), null);
 });
+
+test("still finds the warning when it is the last words with no full stop", () => {
+  assert.equal(allergenNotice("Chicken with peanuts. Contains peanuts"), "Contains peanuts");
+  assert.equal(allergenNotice("Contains peanuts; served hot"), "Contains peanuts");
+});

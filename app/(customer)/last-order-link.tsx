@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { readLastOrder, type LastOrder } from "@/lib/last-order";
 import { pill } from "@/lib/ui";
@@ -9,7 +10,10 @@ import { pill } from "@/lib/ui";
 export function LastOrderLink({ className = "" }: { className?: string }) {
   // Read after load: storage doesn't exist on the server, and the server and browser must render the same.
   const [order, setOrder] = useState<LastOrder | null>(null);
-  useEffect(() => { setOrder(readLastOrder()); }, []);
+  // The header stays mounted while the customer moves between pages, so look again on every page change
+  // (the order page saves the order after the header has already looked).
+  const pathname = usePathname();
+  useEffect(() => { setOrder(readLastOrder()); }, [pathname]);
   if (!order) return null;
   return (
     <Link

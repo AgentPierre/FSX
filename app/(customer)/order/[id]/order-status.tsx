@@ -31,7 +31,7 @@ export function OrderStatus({ initial }: { initial: PublicOrder }) {
   // Remember this order for the "Your order" shortcut on the menu; forget it once it is finished.
   const finished = isFinal(order);
   useEffect(() => {
-    if (finished) clearLastOrder();
+    if (finished) clearLastOrder(order.id);
     else saveLastOrder({ id: order.id, orderNumber: order.orderNumber });
   }, [finished, order.id, order.orderNumber]);
 
