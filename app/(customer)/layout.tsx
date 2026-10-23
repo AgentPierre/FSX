@@ -21,7 +21,7 @@ async function CustomerData({ children }: { children: React.ReactNode }) {
 }
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<p role="status" className="p-8">Loading the menu and pickup information…</p>}>
+  return <Suspense fallback={<p role="status" className="flex min-h-[60vh] items-center justify-center p-8 text-center text-lg font-bold text-brand-blue">Loading the menu and pickup information…</p>}>
     <CustomerData>{children}</CustomerData>
   </Suspense>;
 }

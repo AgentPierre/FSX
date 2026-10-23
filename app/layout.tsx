@@ -15,7 +15,7 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Menciu's Chopstix",
+  title: { default: "Menciu's Chopstix | Order online for pickup", template: "%s | Menciu's Chopstix" },
   description: "Order online for pickup — Menciu's Chopstix, Houston",
 };
 

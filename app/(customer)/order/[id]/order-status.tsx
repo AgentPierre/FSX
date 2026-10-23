@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatCents } from "@/lib/money";
 import type { PublicOrder } from "@/lib/public-order";
+import { clearLastOrder, saveLastOrder } from "@/lib/last-order";
 
 const PENDING_MS = 3_000; // waiting for the Stripe webhook
 const ACTIVE_MS = 10_000; // paid, ticket still moving
@@ -26,6 +27,13 @@ export function OrderStatus({ initial }: { initial: PublicOrder }) {
   const [order, setOrder] = useState(initial);
   const [lost, setLost] = useState(false);
   const [tick, setTick] = useState(0);
+
+  // Remember this order for the "Your order" shortcut on the menu; forget it once it is finished.
+  const finished = isFinal(order);
+  useEffect(() => {
+    if (finished) clearLastOrder();
+    else saveLastOrder({ id: order.id, orderNumber: order.orderNumber });
+  }, [finished, order.id, order.orderNumber]);
 
   useEffect(() => {
     if (isFinal(order)) return;

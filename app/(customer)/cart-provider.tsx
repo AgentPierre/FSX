@@ -6,11 +6,14 @@ import type { CartState, CartSelection } from "@/lib/cart";
 import type { BusinessHour, MenuCategory, Settings } from "@/lib/types";
 import { formatCents } from "@/lib/money";
 import { SiteHeader } from "./site-header";
+import { useOpenNow } from "./open-status";
 
 interface CartContextValue extends CartState {
   menu: MenuCategory[];
   settings: Settings | null;
   businessHours: BusinessHour[] | null;
+  /** False when the restaurant is closed right now (ordering is off); null when unknown, e.g. hours failed to load. */
+  ordersOpen: boolean | null;
   subtotalCents: number | null;
   add: (selection: CartSelection) => void;
   edit: (id: string, selection: CartSelection) => void;
@@ -53,9 +56,10 @@ export function CartProvider({ menu, settings, businessHours, children }: {
   const invalidLines = state.lines.some((line) => validateSelection(line, menu));
   const subtotalCents = cartSubtotalCents(state.lines, menu);
   const subtotalLabel = subtotalCents === null ? "Price unavailable" : formatCents(subtotalCents);
+  const ordersOpen = useOpenNow(businessHours);
   const count = state.lines.reduce((sum, line) => sum + line.quantity, 0);
   return (
-    <CartContext.Provider value={{ ...state, menu, settings, businessHours, subtotalCents,
+    <CartContext.Provider value={{ ...state, menu, settings, businessHours, ordersOpen, subtotalCents,
       add: (selection) => dispatch({ type: "save", line: { id: crypto.randomUUID(), ...selectionPayload(selection) }, menu, editing: false }),
       edit: (id, selection) => dispatch({ type: "save", line: { id, ...selectionPayload(selection) }, menu, editing: true }),
       remove: (id) => dispatch({ type: "remove", id }), clear: () => dispatch({ type: "clear" }),
@@ -64,7 +68,7 @@ export function CartProvider({ menu, settings, businessHours, children }: {
         return checkoutLines(state.lines, menu);
       },
     }}>
-      <SiteHeader businessHours={businessHours} ready={state.ready} count={count} subtotalLabel={subtotalLabel}
+      <SiteHeader businessHours={businessHours} ordersOpen={ordersOpen} ready={state.ready} count={count} subtotalLabel={subtotalLabel}
         message={state.message} actionKey={state.lines} invalidLines={invalidLines} storageError={storageError} />
       {children}
     </CartContext.Provider>

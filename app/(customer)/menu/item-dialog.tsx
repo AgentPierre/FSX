@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef } from "react";
 import type { MenuItem } from "@/lib/types";
 import { MenuThumb } from "@/components/menu-thumb";
+import { allergenNotice } from "@/lib/allergens";
 import { useCart } from "../cart-provider";
 import { ItemCustomization } from "../item-customization";
 
@@ -44,6 +45,11 @@ export function ItemDialog({ item, tone, onClose }: { item: MenuItem; tone: numb
         <p className="font-mono text-xs text-muted"><span className="sr-only">Item code </span>{item.code}</p>
         <h2 id={titleId} className="mt-1 text-3xl font-black leading-tight text-brand-blue">{item.name}</h2>
         {item.description && <p className="mt-2 text-muted">{item.description}</p>}
+        {allergenNotice(item.description) && (
+          <p className="mt-3 rounded-xl border-2 border-ink bg-mustard px-3 py-2 font-bold text-ink">
+            <span className="sr-only">Allergen warning: </span>{allergenNotice(item.description)}
+          </p>
+        )}
         {item.isCatering && <p className="mt-2 text-sm font-semibold">{settings ? `Allow at least ${settings.leadCateringMinutes} minutes for pickup.` : "Pickup lead time is currently unavailable."}</p>}
         <div className="mt-5">
           <ItemCustomization item={item} onSave={add} inSheet onAdded={() => ref.current?.close()} />

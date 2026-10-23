@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 // The order link is the customer's access (see docs/api.md): keep it out of search engines and
 // don't leak it to other sites through the Referer header.
 export const metadata: Metadata = {
+  title: "Your order",
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };

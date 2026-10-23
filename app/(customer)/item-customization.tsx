@@ -30,7 +30,7 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
   inSheet?: boolean;
   focusOnMount?: boolean;
 }) {
-  const { menu, ready, lines } = useCart();
+  const { menu, ready, lines, ordersOpen } = useCart();
   const id = useId();
   const [sizeId, setSizeId] = useState(initial?.sizeId ?? item.sizes[0]?.id ?? "");
   const [spicy, setSpicy] = useState(initial?.spicy ?? false);
@@ -77,7 +77,9 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
   const options = menuItems(menu).filter((candidate) => candidate.isActive && /^G(?:[2-6]|9|10)$/.test(candidate.code));
   const size = item.sizes.find((candidate) => candidate.id === sizeId);
   const total = size ? formatCents(size.priceCents * quantity) : "";
-  const disabled = !ready || !item.isAvailable || !item.isActive;
+  // Closed: adding is off, but a line already in the cart can still be edited.
+  const closed = ordersOpen === false && !initial;
+  const disabled = !ready || !item.isAvailable || !item.isActive || closed;
   const setQty = (next: number) => setQuantity(Math.min(50, Math.max(1, next)));
   const label = "mb-2 text-sm font-bold uppercase tracking-wide text-muted";
   const stepButton = "flex h-11 w-11 items-center justify-center rounded-full text-2xl font-bold enabled:hover:bg-tile focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:opacity-30";
@@ -131,6 +133,7 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
           <span aria-hidden="true">+</span> Add a note for the kitchen
         </button>}
       </fieldset>
+      {closed && <p className="mt-3 text-sm font-bold text-ink">We&apos;re closed right now, so ordering is off.</p>}
       <p role="alert" className="mt-3 text-sm font-semibold text-brand-red-dark">{error}</p>
       <div className={`mt-4 flex flex-wrap items-center gap-3 ${inSheet ? "sticky bottom-0 -mx-5 border-t-2 border-ink bg-cream px-5 py-4" : "py-2"}`}>
         <div role="group" aria-label="Quantity" className="flex items-center rounded-full border-2 border-ink bg-paper">

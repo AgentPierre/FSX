@@ -6,6 +6,7 @@ import { menuItems, resolveSize, validateSelection } from "@/lib/cart";
 import { formatCents } from "@/lib/money";
 import { useCart } from "../cart-provider";
 import { ItemCustomization } from "../item-customization";
+import { CartTotals } from "../cart-totals";
 import { sizeLabel } from "@/lib/menu-display";
 
 export default function Page() {
@@ -59,8 +60,7 @@ export default function Page() {
               })}
             </ul>
             <div className="mt-6 rounded-xl bg-white p-6">
-              <p className="flex flex-wrap justify-between gap-3 text-xl font-semibold"><span>Subtotal</span><span className="tabular-nums">{cart.subtotalCents === null ? "Price unavailable" : formatCents(cart.subtotalCents)}</span></p>
-              <p className="mt-2 text-sm">Tax is excluded. Prices and availability are verified by the server when placing your order.</p>
+              <CartTotals subtotalCents={cart.subtotalCents} taxRateBps={cart.settings?.taxRateBps ?? null} />
               <button type="button" className={`${destructiveButton} mt-4`} onClick={() => { cart.clear(); setEditing(null); focusAfterUpdate("continue-browsing"); }}>Clear cart</button>
             </div>
           </>
