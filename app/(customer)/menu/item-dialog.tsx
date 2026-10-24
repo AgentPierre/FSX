@@ -6,19 +6,14 @@ import { MenuThumb } from "@/components/menu-thumb";
 import { allergenNotice } from "@/lib/allergens";
 import { useCart } from "../cart-provider";
 import { ItemCustomization } from "../item-customization";
+import { useBackdropClose } from "./use-backdrop-close";
 
 /** Add-to-cart sheet. Uses the browser's own <dialog>, which traps focus, closes on Esc and restores focus. */
 export function ItemDialog({ item, tone, onClose }: { item: MenuItem; tone: number; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const { add, settings } = useCart();
-  const downOutside = useRef(false);
-  const outside = (event: { target: EventTarget; clientX: number; clientY: number }) => {
-    const dialog = ref.current;
-    if (!dialog || event.target !== dialog) return false;
-    const box = dialog.getBoundingClientRect();
-    return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
-  };
+  const backdrop = useBackdropClose(ref);
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -31,10 +26,7 @@ export function ItemDialog({ item, tone, onClose }: { item: MenuItem; tone: numb
       ref={ref}
       aria-labelledby={titleId}
       onClose={onClose}
-      // Backdrop click closes. Check the press started AND ended outside the panel, so dragging the
-      // scrollbar or a text selection that ends past the edge does not close it.
-      onPointerDown={(event) => { downOutside.current = outside(event); }}
-      onClick={(event) => { if (downOutside.current && outside(event)) ref.current?.close(); downOutside.current = false; }}
+      {...backdrop}
       className="sheet m-auto w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-[2rem] border-2 border-ink bg-cream p-0 text-ink shadow-[0_-6px_0_0_var(--color-ink)] max-sm:mb-0 max-sm:max-h-[92dvh] max-sm:max-w-none sm:max-h-[88dvh] sm:rounded-[2rem] sm:shadow-[8px_8px_0_0_var(--color-ink)]"
     >
       <div className="relative">

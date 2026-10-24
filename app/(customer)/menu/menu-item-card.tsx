@@ -25,6 +25,7 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
   const [confirming, setConfirming] = useState(false);
   const plusRef = useRef<HTMLButtonElement>(null);
   const nameRef = useRef<HTMLButtonElement>(null);
+  const articleRef = useRef<HTMLElement>(null);
   const refocusAfterRemove = useRef(false);
 
   const itemLines = linesForItem(lines, item);
@@ -39,12 +40,13 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
 
   // The confirmation dialog closes and the minus button may disappear. After every confirmed removal (also
   // when other options of this item stay in the cart) put keyboard focus back on this tile: the plus button,
-  // or the name button if plus is disabled (closed, at the maximum, ...).
+  // or the name button if plus is disabled (closed, at the maximum, ...). An item that became unavailable
+  // while in the cart has both disabled, so the tile itself is the last stop (it takes focus with tabIndex -1).
   useEffect(() => {
     if (!refocusAfterRemove.current) return;
     refocusAfterRemove.current = false;
-    const plus = plusRef.current;
-    (plus && !plus.disabled ? plus : nameRef.current)?.focus();
+    const usable = [plusRef.current, nameRef.current].find((button) => button && !button.disabled);
+    (usable ?? articleRef.current)?.focus();
   }, [lines]);
 
   function plus() {
@@ -63,9 +65,11 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
 
   return (
     <article
+      ref={articleRef}
+      tabIndex={-1}
       aria-labelledby={`item-${item.id}`}
       style={{ animationDelay: `${Math.min(index, 11) * 45}ms` }}
-      className={`anim-rise sticker sticker-hover relative flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-paper ${canOrder ? "" : "opacity-70"}`}
+      className={`anim-rise sticker sticker-hover relative flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-paper focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue ${canOrder ? "" : "opacity-70"}`}
     >
       <div className="relative">
         <MenuThumb code={item.code} tone={tone} className="aspect-[4/3] w-full border-b-2 border-ink" />
