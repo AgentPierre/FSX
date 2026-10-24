@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { menuItems, sameSelection, supportsSpicy, validateSelection } from "@/lib/cart";
+import { MAX_LINES, menuItems, sameSelection, supportsSpicy, validateSelection } from "@/lib/cart";
 import type { CartLine, CartSelection } from "@/lib/cart";
 import type { MenuItem } from "@/lib/types";
 import { formatCents } from "@/lib/money";
@@ -87,7 +87,7 @@ export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, in
       setAdded(false);
       pendingAdd.current = null;
       const selection: CartSelection = { sizeId, quantity, spicy, instructions: instructions.trim(), components: item.code === "G1" ? halves : [] };
-      const problem = validateSelection(selection, menu) ?? (!initial && lines.length >= 30 ? "Cart can contain at most 30 lines." : null);
+      const problem = validateSelection(selection, menu) ?? (!initial && lines.length >= MAX_LINES && !lines.some((line) => sameSelection(line, selection)) ? "Cart can contain at most 30 lines." : null);
       if (problem) { setError(problem); return; }
       // Confirm the new line in context before displaying success.
       if (!initial) pendingAdd.current = { before: quantityOfSelection(lines, selection), selection };

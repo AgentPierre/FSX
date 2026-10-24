@@ -32,7 +32,9 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     if (same) {
       const quantity = same.quantity + action.line.quantity;
       if (quantity > MAX_QUANTITY) return { ...state, message: "Quantity must be between 1 and 50." };
-      return { ...state, lines: state.lines.map((line) => line === same ? { ...line, quantity } : line), message: "Item added to cart." };
+      // The merged line moves to the end: the menu tile's plus and minus act on an item's most recent line,
+      // so it must be the one the customer just added to (plain, spicy, plain again leaves plain last).
+      return { ...state, lines: [...state.lines.filter((line) => line !== same), { ...same, quantity }], message: "Item added to cart." };
     }
   }
   if (!action.editing && state.lines.length >= MAX_LINES) return { ...state, message: "Cart can contain at most 30 lines." };

@@ -98,7 +98,7 @@ tiles (2 per row on phones, up to 4 on desktop).
 
 Adding to the cart:
 - **Plus adds one straight away, no pop-up.** Once an item is in the cart the tile shows a count
-  badge and a minus / count / plus control. Plus and minus act on the item's most recent cart line.
+  badge and a minus / count / plus control. The count on a tile is the total across every option of that item (for example plain and spicy rice together). Plus and minus act on the item's most recent cart line (the one last added to or merged into); to change another option, open the options sheet or the cart.
 - **Taking out the last one asks first:** minus on a quantity of 1 opens "Remove it?" (Keep it / Remove).
 - **Items that need a choice** (anything with sizes, and the Combination Plate) open the options sheet
   on the first plus. Tapping a tile's name opens the same sheet for any item: size chips, combo
