@@ -26,7 +26,7 @@ export function useOpenNow(businessHours: BusinessHour[] | null): boolean | null
 export function OpenPill({ open, className = "" }: { open: boolean | null; className?: string }) {
   if (open === null) return null;
   return (
-    <span className={`${pill} items-center gap-1.5 ${open ? "bg-open text-open-ink" : "bg-tile text-ink"} ${className || "inline-flex"}`}>
+    <span className={`${pill} inline-flex items-center gap-1.5 ${open ? "bg-open text-open-ink" : "bg-tile text-ink"} ${className}`}>
       <span aria-hidden="true" className={`h-2 w-2 rounded-full ${open ? "bg-status-ready" : "bg-muted"}`} />
       {open ? "Open now" : "Closed now"}
     </span>

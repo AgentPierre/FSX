@@ -39,8 +39,10 @@ export function SiteHeader({ businessHours, ordersOpen, ready, count, subtotalLa
           Menciu&apos;s Chopstix
         </Link>
         <div className="flex items-center gap-3">
-          <LastOrderLink className="hidden text-xs sm:inline-flex" />
-          <OpenPill open={ordersOpen} className="hidden text-xs sm:inline-flex" />
+          <span className="hidden items-center gap-3 sm:flex">
+            <LastOrderLink className="text-xs" />
+            <OpenPill open={ordersOpen} className="text-xs" />
+          </span>
           <Link
             href="/cart"
             aria-label={ready ? `Cart, ${count} ${count === 1 ? "item" : "items"}, subtotal ${subtotalLabel}` : "Cart"}
