@@ -1,4 +1,4 @@
-import { earliestPickup, isOpenAt } from "./hours";
+import { centralParts, earliestPickup, isOpenAt } from "./hours";
 import { resolveSize } from "./cart";
 import { createOrderSchema } from "./validation";
 import type {
@@ -7,6 +7,18 @@ import type {
   MenuCategory,
   Settings,
 } from "./types";
+
+/** Checkout-local fallback until the cart provider supplies shared ordersOpen. */
+export function checkoutOrdersOpen(
+  now: Date,
+  hours: BusinessHour[] | null,
+): boolean | null {
+  const today = hours?.find(
+    (day) => day.dayOfWeek === centralParts(now).dayOfWeek,
+  );
+  if (!today) return null;
+  return isOpenAt(now, [today]);
+}
 
 export function houstonInputValue(date: Date): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -49,8 +61,10 @@ export function pickupError(
   lead: number,
   hours: BusinessHour[],
 ): string | null {
-  if (!isOpenAt(now, hours))
+  if (checkoutOrdersOpen(now, hours) === false)
     return "Online ordering is currently closed. Please return during business hours.";
+  if (checkoutOrdersOpen(now, hours) === null)
+    return "Pickup information is unavailable. Refresh the page to try again.";
   if (!pickup || !Number.isFinite(pickup.getTime()))
     return "Choose a valid pickup date and time in Houston time.";
   if (pickup < earliestPickup(now, lead))

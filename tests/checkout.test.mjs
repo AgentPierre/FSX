@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+import ts from "typescript";
 import { loadModule } from "./helpers/load-module.mjs";
 
 const require = createRequire(import.meta.url);
@@ -66,6 +69,71 @@ const settings = {
   leadCateringMinutes: 40,
   taxRateBps: 825,
 };
+
+test("checkout immediately renders unavailable hours before pickup selection", () => {
+  const React = require("react");
+  const { renderToStaticMarkup } = require("react-dom/server");
+  const source = readFileSync(
+    new URL("../app/(customer)/checkout/checkout-form.tsx", import.meta.url),
+    "utf8",
+  );
+  const compiled = ts.transpileModule(source, {
+    fileName: "checkout-form.tsx",
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      jsx: ts.JsxEmit.React,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  const dependencies = {
+    react: {
+      useState: (initial) => [
+        initial === null
+          ? now
+          : typeof initial === "function"
+            ? initial()
+            : initial,
+        () => {},
+      ],
+      useEffect: () => {},
+      useRef: () => ({ current: null }),
+    },
+    "next/link": () => null,
+    "../cart-provider": {
+      useCart: () => ({
+        ready: true,
+        lines: [line],
+        menu,
+        subtotalCents: 1299,
+        settings,
+        businessHours: businessHours.filter((day) => day.dayOfWeek !== 3),
+      }),
+    },
+    "@/lib/cart": cart,
+    "@/lib/checkout": checkout,
+    "@/lib/money": loadModule(new URL("../lib/money.ts", import.meta.url), {}),
+    "@/lib/ui": { btnPrimary: "", btnSecondary: "" },
+  };
+  const loaded = { exports: {} };
+  const run = vm.runInNewContext(
+    `(function(require, module, exports) { ${compiled}\n})`,
+    { React },
+  );
+  run(
+    (name) => {
+      assert.ok(name in dependencies, `Unexpected dependency: ${name}`);
+      return dependencies[name];
+    },
+    loaded,
+    loaded.exports,
+  );
+  const html = renderToStaticMarkup(
+    React.createElement(loaded.exports.CheckoutForm),
+  );
+  assert.match(html, /Pickup information is unavailable/);
+  assert.match(html, /role="alert"/);
+  assert.doesNotMatch(html, /Online ordering is currently closed/);
+});
 
 test("customer schema matches required names, emails and optional phone limits", () => {
   const schema = validation.createOrderSchema.shape.customer;
@@ -185,7 +253,12 @@ test("cart persistence replaces stale data with the exact current whitelisted sn
   cart.persistCart(changed, storage);
   assert.deepEqual(
     JSON.parse(JSON.stringify(cart.restoreCart(storage.getItem(), menu).lines)),
-    changed.map((entry) => ({ id: entry.id, ...line, quantity: 2, instructions: "New note" })),
+    changed.map((entry) => ({
+      id: entry.id,
+      ...line,
+      quantity: 2,
+      instructions: "New note",
+    })),
   );
 });
 
@@ -401,7 +474,34 @@ test("pickup enforces exact lead, stored opening/closing boundaries and ordering
     checkout.pickupError(new Date("2026-10-21T20:00Z"), now, 15, changedHours),
     /closed/,
   );
-  assert.match(checkout.pickupError(null, now, 15, []), /closed/);
+  assert.match(checkout.pickupError(null, now, 15, []), /unavailable/);
+});
+
+test("checkout distinguishes confirmed closure from unavailable hours", () => {
+  assert.equal(checkout.checkoutOrdersOpen(now, businessHours), true);
+  assert.equal(
+    checkout.checkoutOrdersOpen(
+      new Date("2026-10-25T17:00:00Z"),
+      businessHours,
+    ),
+    false,
+  );
+  assert.equal(checkout.checkoutOrdersOpen(now, null), null);
+  assert.equal(checkout.checkoutOrdersOpen(now, []), null);
+  assert.equal(
+    checkout.checkoutOrdersOpen(
+      now,
+      businessHours.filter((day) => day.dayOfWeek !== 3),
+    ),
+    null,
+  );
+  assert.equal(
+    checkout.checkoutOrdersOpen(
+      new Date("2026-10-21T15:59:00Z"),
+      businessHours,
+    ),
+    false,
+  );
 });
 
 test("payload is whitelisted and preserves combo, spicy and instructions without prices or IDs", () => {

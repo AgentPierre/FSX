@@ -6,6 +6,7 @@ import { useCart } from "../cart-provider";
 import { menuItems, resolveSize, validateSelection } from "@/lib/cart";
 import {
   buildCheckoutPayload,
+  checkoutOrdersOpen,
   createCheckoutSubmission,
   validateCustomer,
   checkoutLead,
@@ -15,7 +16,7 @@ import {
   pickupError,
 } from "@/lib/checkout";
 import { formatCents, taxCents } from "@/lib/money";
-import { isOpenAt } from "@/lib/hours";
+import { btnPrimary, btnSecondary } from "@/lib/ui";
 
 export function CheckoutForm() {
   const cart = useCart();
@@ -51,9 +52,12 @@ export function CheckoutForm() {
     return <p role="status">Restoring your cart and pickup information…</p>;
   if (!cart.lines.length)
     return (
-      <p>
+      <p className="sticker mt-6 rounded-card bg-paper p-6">
         Your cart is empty.{" "}
-        <Link href="/menu" className="underline">
+        <Link
+          href="/menu"
+          className="inline-flex min-h-11 items-center text-brand-blue underline focus-visible:outline-2 focus-visible:outline-offset-4"
+        >
           Browse the menu
         </Link>
       </p>
@@ -63,22 +67,29 @@ export function CheckoutForm() {
     cart.subtotalCents === null
   )
     return (
-      <p role="alert">
+      <p role="alert" className="sticker mt-6 rounded-card bg-paper p-6">
         Some selections are unavailable.{" "}
-        <Link href="/cart" className="underline">
+        <Link
+          href="/cart"
+          className="inline-flex min-h-11 items-center text-brand-blue underline focus-visible:outline-2 focus-visible:outline-offset-4"
+        >
           Review your cart
         </Link>
       </p>
     );
-  if (!settings || !businessHours?.length)
+  if (
+    !settings ||
+    !businessHours?.length ||
+    checkoutOrdersOpen(now, businessHours) === null
+  )
     return (
-      <p role="alert">
+      <p role="alert" className="sticker mt-6 rounded-card bg-paper p-6">
         Pickup information is unavailable. Refresh the page to try again. Your
         cart is preserved.
       </p>
     );
   const lead = checkoutLead(cart.lines, cart.menu, settings);
-  const closed = !isOpenAt(now, businessHours);
+  const closed = checkoutOrdersOpen(now, businessHours) === false;
   const pickupProblem = pickup
     ? pickupError(houstonInstant(pickup), now, lead, businessHours)
     : null;
@@ -87,6 +98,11 @@ export function CheckoutForm() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submission.isActive || !settings || !businessHours) return;
+    if (checkoutOrdersOpen(new Date(), businessHours) === false) {
+      setNow(new Date());
+      setError("Online ordering is currently closed. Your cart is preserved.");
+      return;
+    }
     setError("");
     setFields({});
     const form = new FormData(event.currentTarget);
@@ -154,135 +170,173 @@ export function CheckoutForm() {
 
   return (
     <>
-      <Link href="/cart" className="my-4 inline-block underline">
+      <Link href="/cart" className={`${btnSecondary} my-6`}>
         Back to cart
       </Link>
-      <section aria-labelledby="summary-heading" className="rounded border p-4">
-        <h2 id="summary-heading" className="text-xl font-semibold">
-          Order summary
-        </h2>
-        <ul className="mt-3 space-y-3">
-          {cart.lines.map((line) => {
-            const hit = resolveSize(cart.menu, line.sizeId)!;
-            return (
-              <li key={line.id}>
-                <p>
-                  {line.quantity} × {hit.item.code} {hit.item.name}
-                  {hit.size.name !== "regular" && ` (${hit.size.name})`} —{" "}
-                  {formatCents(hit.size.priceCents * line.quantity)}
-                </p>
-                {!!line.components.length && (
-                  <p>
-                    Half orders:{" "}
-                    {line.components
-                      .map(
-                        (code) =>
-                          `${code} ${menuItems(cart.menu).find((item) => item.code === code)?.name ?? ""}`,
-                      )
-                      .join(" + ")}
-                  </p>
-                )}
-                {line.spicy && <p>Make it spicy</p>}
-                {line.instructions && (
-                  <p className="break-words">
-                    Instructions: {line.instructions}
-                  </p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        <p className="mt-4">
-          Estimated subtotal: {formatCents(cart.subtotalCents)}
-          <br />
-          Estimated tax ({settings.taxRateBps / 100}%): {formatCents(tax)}
-          <br />
-          Estimated total: {formatCents(cart.subtotalCents + tax)}
-        </p>
-        <p className="mt-2 text-sm">
-          Prices and availability are verified by the server. Review the final
-          total on Stripe before paying.
-        </p>
-      </section>
-      <form onSubmit={submit} noValidate className="mt-6 space-y-4">
-        {error && (
-          <div
-            ref={errorRef}
-            tabIndex={-1}
-            role="alert"
-            className="rounded border p-3"
+      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-2">
+        <section
+          aria-labelledby="summary-heading"
+          className="sticker min-w-0 rounded-card bg-paper p-4 sm:p-6"
+        >
+          <h2
+            id="summary-heading"
+            className="text-2xl font-bold text-brand-blue"
           >
-            {error}
-          </div>
-        )}
-        <fieldset disabled={busy} className="space-y-4">
-          <legend className="text-xl font-semibold">
-            Customer information
-          </legend>
-          {(
-            [
-              ["name", "Name (required)", "text", 100, "name"],
-              ["email", "Email (required)", "email", 254, "email"],
-              ["phone", "Phone (optional)", "tel", 30, "tel"],
-            ] as const
-          ).map(([name, label, type, maxLength, autoComplete]) => (
-            <div key={name}>
-              <label htmlFor={name} className="block">
-                {label}
+            Order summary
+          </h2>
+          <ul className="mt-3 space-y-3">
+            {cart.lines.map((line) => {
+              const hit = resolveSize(cart.menu, line.sizeId)!;
+              return (
+                <li
+                  key={line.id}
+                  className="break-words border-b border-line pb-3"
+                >
+                  <p>
+                    {line.quantity} × {hit.item.code} {hit.item.name}
+                    {hit.size.name !== "regular" &&
+                      ` (${hit.size.name})`} —{" "}
+                    {formatCents(hit.size.priceCents * line.quantity)}
+                  </p>
+                  {!!line.components.length && (
+                    <p>
+                      Half orders:{" "}
+                      {line.components
+                        .map(
+                          (code) =>
+                            `${code} ${menuItems(cart.menu).find((item) => item.code === code)?.name ?? ""}`,
+                        )
+                        .join(" + ")}
+                    </p>
+                  )}
+                  {line.spicy && <p>Make it spicy</p>}
+                  {line.instructions && (
+                    <p className="break-words">
+                      Instructions: {line.instructions}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <dl className="mt-5 space-y-3 tabular-nums">
+            <div className="flex flex-wrap justify-between gap-2">
+              <dt>Subtotal</dt>
+              <dd>{formatCents(cart.subtotalCents)}</dd>
+            </div>
+            <div className="flex flex-wrap justify-between gap-2">
+              <dt>Estimated tax ({settings.taxRateBps / 100}%)</dt>
+              <dd>{formatCents(tax)}</dd>
+            </div>
+            <div className="flex flex-wrap justify-between gap-2 border-t-2 border-ink pt-3 text-xl font-bold text-brand-blue">
+              <dt>Estimated total</dt>
+              <dd>{formatCents(cart.subtotalCents + tax)}</dd>
+            </div>
+          </dl>
+          <p className="mt-2 text-sm">
+            Prices and availability are verified by the server. Review the final
+            total on Stripe before paying.
+          </p>
+        </section>
+        <form
+          onSubmit={submit}
+          noValidate
+          aria-busy={busy}
+          className="sticker min-w-0 space-y-4 rounded-card bg-paper p-4 sm:p-6"
+        >
+          {error && (
+            <div
+              ref={errorRef}
+              tabIndex={-1}
+              role="alert"
+              className="rounded-xl border-2 border-brand-red-dark p-3 text-brand-red-dark focus-visible:outline-2 focus-visible:outline-offset-4"
+            >
+              {error}
+            </div>
+          )}
+          <fieldset disabled={busy} className="min-w-0 space-y-4">
+            <legend className="text-2xl font-bold text-brand-blue">
+              Customer information
+            </legend>
+            {(
+              [
+                ["name", "Name (required)", "text", 100, "name"],
+                ["email", "Email (required)", "email", 254, "email"],
+                ["phone", "Phone (optional)", "tel", 30, "tel"],
+              ] as const
+            ).map(([name, label, type, maxLength, autoComplete]) => (
+              <div key={name}>
+                <label htmlFor={name} className="mb-2 block font-bold">
+                  {label}
+                </label>
+                <input
+                  id={name}
+                  name={name}
+                  type={type}
+                  autoComplete={autoComplete}
+                  maxLength={name === "email" ? maxLength : undefined}
+                  required={name !== "phone"}
+                  aria-invalid={!!fields[name]}
+                  aria-describedby={fields[name] ? `${name}-error` : undefined}
+                  className="block min-h-12 w-full min-w-0 max-w-full rounded-xl border-2 border-ink bg-cream px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue aria-invalid:border-brand-red-dark"
+                />
+                {fields[name] && (
+                  <p
+                    className="mt-2 text-sm text-brand-red-dark"
+                    id={`${name}-error`}
+                  >
+                    {fields[name]}
+                  </p>
+                )}
+              </div>
+            ))}
+            <div>
+              <label htmlFor="pickup" className="mb-2 block font-bold">
+                Pickup date and time (Houston time, required)
               </label>
               <input
-                id={name}
-                name={name}
-                type={type}
-                autoComplete={autoComplete}
-                maxLength={name === "email" ? maxLength : undefined}
-                required={name !== "phone"}
-                aria-invalid={!!fields[name]}
-                aria-describedby={fields[name] ? `${name}-error` : undefined}
-                className="min-h-11 w-full rounded border p-2"
+                id="pickup"
+                type="datetime-local"
+                required
+                step={60}
+                min={earliestInput(now, lead)}
+                value={pickup}
+                onChange={(event) => setPickup(event.target.value)}
+                aria-invalid={!!pickupProblem}
+                aria-describedby="pickup-help pickup-error"
+                className="block min-h-12 w-full min-w-0 max-w-full rounded-xl border-2 border-ink bg-cream px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue aria-invalid:border-brand-red-dark"
               />
-              {fields[name] && <p id={`${name}-error`}>{fields[name]}</p>}
+              <p id="pickup-help" className="mt-2 text-sm">
+                Pickup only. Allow at least {lead} minutes. All times are
+                America/Chicago. {hoursDescription(businessHours)}
+              </p>
+              <p
+                id="pickup-error"
+                className="mt-2 text-sm text-brand-red-dark"
+                role="status"
+              >
+                {pickupProblem}
+              </p>
             </div>
-          ))}
-          <div>
-            <label htmlFor="pickup" className="block">
-              Pickup date and time (Houston time, required)
-            </label>
-            <input
-              id="pickup"
-              type="datetime-local"
-              required
-              step={60}
-              min={earliestInput(now, lead)}
-              value={pickup}
-              onChange={(event) => setPickup(event.target.value)}
-              aria-invalid={!!pickupProblem}
-              aria-describedby="pickup-help pickup-error"
-              className="min-h-11 w-full rounded border p-2"
-            />
-            <p id="pickup-help" className="mt-2 text-sm">
-              Pickup only. Allow at least {lead} minutes. All times are
-              America/Chicago. {hoursDescription(businessHours)}
-            </p>
-            <p id="pickup-error" role="status">
-              {pickupProblem}
-            </p>
-          </div>
-          {closed && (
-            <p role="status">
-              Online ordering is currently closed. Please return during the
-              listed business hours.
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={busy || closed || !!pickupProblem || !pickup}
-            className="min-h-11 rounded border px-4 py-2 disabled:opacity-50"
-          >
-            {busy ? "Opening secure checkout…" : "Continue to Stripe payment"}
-          </button>
-        </fieldset>
-      </form>
+            {closed && (
+              <p
+                role="status"
+                className="rounded-xl border-2 border-ink bg-mustard p-3 font-bold"
+              >
+                Online ordering is currently closed. Please return during the
+                listed business hours.
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={busy || closed || !!pickupProblem || !pickup}
+              className={`${btnPrimary} w-full`}
+            >
+              {busy ? "Opening secure checkout…" : "Continue to Stripe payment"}
+            </button>
+          </fieldset>
+        </form>
+      </div>
     </>
   );
 }
