@@ -11,7 +11,7 @@ export interface CartLine extends CartSelection { id: string }
 export interface CartState { lines: CartLine[]; ready: boolean; message: string }
 export type CartAction = { type: "restore"; lines: CartLine[]; message: string }
   | { type: "save"; line: CartLine; menu: MenuCategory[]; editing: boolean }
-  | { type: "remove"; id: string } | { type: "clear" };
+  | { type: "remove"; id: string } | { type: "clear" } | { type: "notice"; message: string };
 
 /** Same dish with the same options: size, spicy, note and half orders. */
 export function sameSelection(a: CartSelection, b: CartSelection): boolean {
@@ -22,6 +22,7 @@ export function sameSelection(a: CartSelection, b: CartSelection): boolean {
 export function cartReducer(state: CartState, action: CartAction): CartState {
   if (action.type === "restore") return { lines: action.lines, ready: true, message: action.message };
   if (!state.ready) return state;
+  if (action.type === "notice") return { ...state, message: action.message };
   if (action.type === "clear") return { ...state, lines: [], message: "Cart cleared." };
   if (action.type === "remove") return { ...state, lines: state.lines.filter((line) => line.id !== action.id), message: "Item removed." };
   const error = validateSelection(action.line, action.menu);

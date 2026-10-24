@@ -23,7 +23,9 @@ interface CartContextValue extends CartState {
 }
 const CartContext = createContext<CartContextValue | null>(null);
 
-export function CartProvider({ menu, settings, businessHours, children }: {
+const CLOSED_MESSAGE = "We're closed right now, so ordering is off. You can still lower quantities or remove items.";
+
+export function CartProvider({ menu, settings, businessHours: loadedHours, children }: {
   menu: MenuCategory[];
   settings: Settings | null;
   businessHours: BusinessHour[] | null;
@@ -56,12 +58,23 @@ export function CartProvider({ menu, settings, businessHours, children }: {
   const invalidLines = state.lines.some((line) => validateSelection(line, menu));
   const subtotalCents = cartSubtotalCents(state.lines, menu);
   const subtotalLabel = subtotalCents === null ? "Price unavailable" : formatCents(subtotalCents);
+  // An empty list means the hours are unknown, not "closed every day": treat it like hours that failed to load.
+  const businessHours = loadedHours && loadedHours.length > 0 ? loadedHours : null;
   const ordersOpen = useOpenNow(businessHours);
+  const closed = ordersOpen === false;
   const count = state.lines.reduce((sum, line) => sum + line.quantity, 0);
   return (
     <CartContext.Provider value={{ ...state, menu, settings, businessHours, ordersOpen, subtotalCents,
-      add: (selection) => dispatch({ type: "save", line: { id: crypto.randomUUID(), ...selectionPayload(selection) }, menu, editing: false }),
-      edit: (id, selection) => dispatch({ type: "save", line: { id, ...selectionPayload(selection) }, menu, editing: true }),
+      // While closed, nothing can be added or increased (decreases and removal stay allowed). The buttons
+      // are disabled too, but this is the rule, so no other screen can get around it.
+      add: (selection) => closed
+        ? dispatch({ type: "notice", message: CLOSED_MESSAGE })
+        : dispatch({ type: "save", line: { id: crypto.randomUUID(), ...selectionPayload(selection) }, menu, editing: false }),
+      edit: (id, selection) => {
+        const existing = state.lines.find((line) => line.id === id);
+        if (closed && existing && selection.quantity > existing.quantity) dispatch({ type: "notice", message: CLOSED_MESSAGE });
+        else dispatch({ type: "save", line: { id, ...selectionPayload(selection) }, menu, editing: true });
+      },
       remove: (id) => dispatch({ type: "remove", id }), clear: () => dispatch({ type: "clear" }),
       prepareCheckoutLines: () => {
         if (!state.ready) throw new Error("Wait for the cart to finish restoring.");

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadModule } from "./helpers/load-module.mjs";
 
-const { parseLastOrder } = loadModule(new URL("../lib/last-order.ts", import.meta.url), {});
+const { parseLastOrder, msUntilExpiry } = loadModule(new URL("../lib/last-order.ts", import.meta.url), {});
 
 const NOW = 1_800_000_000_000;
 const ID = "3f3b44d4-7d22-8138-9cd4-ccae4cba71ef";
@@ -36,4 +36,10 @@ test("ignores a tampered id or order number so it can never become a strange lin
 
 test("ignores a save time in the future", () => {
   assert.equal(parseLastOrder(stored({ savedAt: NOW + 3600_000 }), NOW), null);
+});
+
+test("msUntilExpiry counts down to the 12 hour mark and never goes negative", () => {
+  const order = { id: ID, orderNumber: "0042", savedAt: NOW - 11 * 3600_000 };
+  assert.equal(msUntilExpiry(order, NOW), 3600_000);
+  assert.equal(msUntilExpiry({ ...order, savedAt: NOW - 20 * 3600_000 }, NOW), 0);
 });

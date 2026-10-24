@@ -109,7 +109,9 @@ Adding to the cart:
 
 Closed, allergens and orders (for checkout and other customer screens):
 - **Closed:** `useCart().ordersOpen` is `false` when the restaurant is closed right now (`null` when the
-  hours could not be loaded, which allows ordering; the server still enforces hours). A banner shows under
+  hours could not be loaded or come back empty, which allows ordering; the server still enforces hours).
+  While closed the cart refuses `add` and any `edit` that raises a quantity (lowering and removing still
+  work), so a screen cannot get around it; disable your own buttons too. A banner shows under
   the header and adding is disabled. **Checkout should disable "Place order" when `ordersOpen === false`.**
 - **Allergens:** `allergenNotice(description)` (`lib/allergens.ts`) pulls "Contains ..." out of a menu
   description; the tile and the options sheet show it as a yellow badge so it is never cut off. A real

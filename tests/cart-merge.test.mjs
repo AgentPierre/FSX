@@ -78,3 +78,11 @@ test("with the cart at the 30-line limit, adding one more of an existing selecti
   assert.equal(refused.lines.length, MAX_LINES);
   assert.match(refused.message, /at most 30 lines/);
 });
+
+test("a notice only changes the message", () => {
+  const state = add(start, sel("s1"), "a");
+  const noticed = cartReducer(state, { type: "notice", message: "Closed." });
+  assert.equal(noticed.message, "Closed.");
+  assert.equal(noticed.lines.length, 1);
+  assert.equal(noticed.lines[0].quantity, 1);
+});

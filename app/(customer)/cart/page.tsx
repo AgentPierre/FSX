@@ -45,7 +45,7 @@ export default function Page() {
                         <div role="group" aria-label={`Quantity for ${name}, line ${index + 1}`} className="flex items-center gap-3">
                           <button type="button" className={button} disabled={line.quantity <= 1 || !!error} aria-label={`Decrease quantity for ${name}, line ${index + 1}`} onClick={() => cart.edit(line.id, { ...line, quantity: line.quantity - 1 })}>−</button>
                           <span className="tabular-nums">{line.quantity}</span>
-                          <button type="button" className={button} disabled={line.quantity >= 50 || !!error} aria-label={`Increase quantity for ${name}, line ${index + 1}`} onClick={() => cart.edit(line.id, { ...line, quantity: line.quantity + 1 })}>+</button>
+                          <button type="button" className={button} disabled={line.quantity >= 50 || !!error || cart.ordersOpen === false} aria-label={`Increase quantity for ${name}, line ${index + 1}`} onClick={() => cart.edit(line.id, { ...line, quantity: line.quantity + 1 })}>+</button>
                         </div>
                         <button id={`cart-edit-${line.id}`} type="button" className={button} disabled={!hit} aria-label={`Edit ${name}, line ${index + 1}`} onClick={() => setEditing(line.id)}>Edit</button>
                         <button type="button" className={destructiveButton} aria-label={`Remove ${name}, line ${index + 1}`} onClick={() => {
