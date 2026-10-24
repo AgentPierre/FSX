@@ -24,7 +24,8 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
   const [sheetOpen, setSheetOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const plusRef = useRef<HTMLButtonElement>(null);
-  const refocusPlus = useRef(false);
+  const nameRef = useRef<HTMLButtonElement>(null);
+  const refocusAfterRemove = useRef(false);
 
   const itemLines = linesForItem(lines, item);
   const last = itemLines[itemLines.length - 1];
@@ -36,13 +37,15 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
   const cartFull = !last && lines.length >= MAX_LINES;
   const lowest = Math.min(...item.sizes.map((size) => size.priceCents));
 
-  // After the last unit is removed the minus button disappears; keep keyboard focus on this card.
+  // The confirmation dialog closes and the minus button may disappear. After every confirmed removal (also
+  // when other options of this item stay in the cart) put keyboard focus back on this tile: the plus button,
+  // or the name button if plus is disabled (closed, at the maximum, ...).
   useEffect(() => {
-    if (quantity === 0 && refocusPlus.current) {
-      refocusPlus.current = false;
-      plusRef.current?.focus();
-    }
-  }, [quantity]);
+    if (!refocusAfterRemove.current) return;
+    refocusAfterRemove.current = false;
+    const plus = plusRef.current;
+    (plus && !plus.disabled ? plus : nameRef.current)?.focus();
+  }, [lines]);
 
   function plus() {
     if (last) {
@@ -86,6 +89,7 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
         )}
         <h3 id={`item-${item.id}`} className="mt-2 text-base font-extrabold leading-snug sm:text-lg">
           <button
+            ref={nameRef}
             type="button"
             disabled={!canOrder}
             onClick={() => setSheetOpen(true)}
@@ -129,7 +133,7 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
         <ConfirmRemove
           name={item.name}
           onKeep={() => setConfirming(false)}
-          onRemove={() => { refocusPlus.current = true; remove(last.id); setConfirming(false); }}
+          onRemove={() => { refocusAfterRemove.current = true; remove(last.id); setConfirming(false); }}
         />
       )}
     </article>

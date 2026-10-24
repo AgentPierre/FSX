@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadModule } from "./helpers/load-module.mjs";
 
-const { cartReducer, sameSelection, MAX_QUANTITY } = loadModule(
+const { cartReducer, sameSelection, MAX_QUANTITY, MAX_LINES } = loadModule(
   new URL("../lib/cart.ts", import.meta.url),
   { "./menu-rules": { allowsSpicy: (code) => /^(G|C|T|R)\d+$/.test(code) } },
 );
@@ -57,4 +57,24 @@ test("editing a line still replaces it in place", () => {
 test("sameSelection compares half orders in order", () => {
   assert.equal(sameSelection(sel("s1", { components: ["G2", "G3"] }), sel("s1", { components: ["G2", "G3"] })), true);
   assert.equal(sameSelection(sel("s1", { components: ["G2", "G3"] }), sel("s1", { components: ["G3", "G2"] })), false);
+});
+
+test("re-adding an earlier option moves that line to the end, so the tile follows what was just added", () => {
+  let state = add(start, sel("s2"), "plain");
+  state = add(state, sel("s2", { spicy: true }), "spicy");
+  state = add(state, sel("s2"), "again");
+  assert.equal(state.lines.map((l) => l.id).join(","), "spicy,plain");
+  assert.equal(state.lines[1].quantity, 2);
+});
+
+test("with the cart at the 30-line limit, adding one more of an existing selection still merges", () => {
+  let state = start;
+  for (let i = 0; i < MAX_LINES; i++) state = add(state, sel("s1", { instructions: `note ${i}` }), `l${i}`);
+  assert.equal(state.lines.length, MAX_LINES);
+  const merged = add(state, sel("s1", { instructions: "note 3" }), "x");
+  assert.equal(merged.lines.length, MAX_LINES);
+  assert.equal(merged.lines[merged.lines.length - 1].quantity, 2);
+  const refused = add(state, sel("s1", { instructions: "brand new" }), "y");
+  assert.equal(refused.lines.length, MAX_LINES);
+  assert.match(refused.message, /at most 30 lines/);
 });

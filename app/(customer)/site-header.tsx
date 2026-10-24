@@ -33,9 +33,9 @@ export function SiteHeader({ businessHours, ordersOpen, ready, count, subtotalLa
   return (
     <div className="border-b-2 border-ink bg-paper">
       <nav aria-label="Ordering navigation" className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
-        <Link href="/menu" className="inline-flex min-h-11 items-center gap-2 rounded whitespace-nowrap font-heading text-lg font-black tracking-tight text-brand-red focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:text-2xl">
+        <Link href="/menu" className="inline-flex min-h-11 items-center gap-2 rounded whitespace-nowrap font-heading text-base font-black tracking-tight text-brand-red min-[360px]:text-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:text-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element -- tiny static logo from /public */}
-          <img src="/brand/chopstix-mark.webp" alt="" width={36} height={36} className="h-9 w-9 rounded-full" />
+          <img src="/brand/chopstix-mark.webp" alt="" width={36} height={36} className="h-9 w-9 rounded-full max-[359px]:hidden" />
           Menciu&apos;s Chopstix
         </Link>
         <div className="flex items-center gap-3">
