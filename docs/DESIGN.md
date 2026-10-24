@@ -79,3 +79,36 @@ Ask the sponsor whether an original vector file exists before anyone traces it.
 1. Does the sponsor have the logo as a vector file, or only the printed menu?
 2. Food photography — do we have any? It changes the menu card layout completely.
 3. Heading typeface — pick one and commit; it's the single most identity-defining choice here.
+
+---
+
+## Built foundation (T29, 21 Oct)
+
+Look: a printed-menu "sticker" style. Brand red and blue on cream with faint paper dots, thick ink
+outlines and hard offset shadows that lift on hover and press on click. Fraunces (soft serif)
+headings, DM Sans body. One light theme only; no dark mode.
+
+Hero: a red band with the headline, lead-time chips and a steaming bowl with crossed chopsticks
+(`components/hero-art.tsx`). Tiles show the item code in big outlined letters until a photo exists.
+Footer: wordmark plus three bold facts (address, pickup only, hours). No small print.
+
+Menu page: one category at a time (tab bar stays pinned; the choice is kept in the URL as
+`#category-<id>`), a grid of tiles (2 per row on phones, up to 4 on desktop), and a bottom-sheet /
+centred card for adding an item: size chips, combo half-order chips, spicy switch, optional note,
+plus/minus quantity and an Add button that shows the line total. A floating cart bar shows on phones.
+
+How to use it:
+- **Colours and fonts** live in `app/globals.css` (`@theme`). Use the classes: `bg-cream`, `bg-paper`,
+  `text-ink`, `text-muted`, `text-brand-red`, `text-brand-blue`, `bg-mustard`, `border-line`, `bg-tile`,
+  `font-heading`. Do not paste hex values into components.
+- **Sticker look:** add the `sticker` class (outline + shadow + lift/press). `anim-rise`, `anim-pop`
+  and `anim-bump` are the shared animations; all are switched off for `prefers-reduced-motion`.
+- **Staff status colours** are `bg-status-received`, `bg-status-progress`, `bg-status-ready`,
+  `bg-status-late`. Pair each with a label (never colour alone).
+- **Buttons:** `btnPrimary` (one per screen) and `btnSecondary` from `lib/ui.ts`.
+- **Customer shell:** `app/(customer)/site-header.tsx` (wordmark, open/closed, cart, add-to-cart toast)
+  and `components/site-footer.tsx`. Every customer page gets them from the layout.
+- **Dish photos:** save `public/menu/<code>.jpg` (e.g. `G1.jpg`, landscape ~4:3, under 300 KB) and add the
+  code to `lib/menu-photos.ts`. Items without a photo show the placeholder tile.
+- Staff and owner screens: same tokens, denser and larger. Build them on `bg-paper`/`bg-ink`
+  with the status colours above.

@@ -7,10 +7,22 @@ import type { MenuItem } from "@/lib/types";
 import { formatCents } from "@/lib/money";
 import { useCart } from "./cart-provider";
 import { sizeLabel } from "@/lib/menu-display";
+import { btnPrimary, btnSecondary } from "@/lib/ui";
 
-export function ItemCustomization({ item, initial, onSave, onCancel, focusOnMount = false }: {
+const chip =
+  "inline-flex min-h-11 cursor-pointer items-center rounded-full border-2 border-ink bg-paper px-4 py-1.5 text-sm font-semibold motion-safe:transition-colors peer-checked:bg-brand-blue peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-blue peer-disabled:cursor-not-allowed peer-disabled:opacity-50";
+
+/**
+ * The options form for one dish: size, combo halves, spicy, a note, quantity, and the Add button.
+ * Used inside the menu's add-to-cart sheet and inline when editing a cart line.
+ * `onAdded` fires once the cart has accepted a brand-new line (the sheet closes itself then).
+ */
+export function ItemCustomization({ item, initial, onSave, onCancel, onAdded, inSheet = false, focusOnMount = false }: {
   item: MenuItem; initial?: CartSelection;
   onSave: (selection: CartSelection) => void; onCancel?: () => void;
+  onAdded?: () => void;
+  /** True inside the add-to-cart sheet: pins the quantity and Add row to the bottom of the sheet. */
+  inSheet?: boolean;
   focusOnMount?: boolean;
 }) {
   const { menu, ready, lines } = useCart();
@@ -18,12 +30,15 @@ export function ItemCustomization({ item, initial, onSave, onCancel, focusOnMoun
   const [sizeId, setSizeId] = useState(initial?.sizeId ?? item.sizes[0]?.id ?? "");
   const [spicy, setSpicy] = useState(initial?.spicy ?? false);
   const [instructions, setInstructions] = useState(initial?.instructions ?? "");
+  const [noteOpen, setNoteOpen] = useState(Boolean(initial?.instructions));
   const [quantity, setQuantity] = useState(initial?.quantity ?? 1);
   const [halves, setHalves] = useState(initial?.components ?? ["", ""]);
   const [error, setError] = useState("");
   const [added, setAdded] = useState(false);
   const pendingAdd = useRef<{ ids: Set<string>; selection: CartSelection } | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onAddedRef = useRef(onAdded);
+  useEffect(() => { onAddedRef.current = onAdded; });
   useEffect(() => {
     const pending = pendingAdd.current;
     if (!pending) return;
@@ -36,6 +51,7 @@ export function ItemCustomization({ item, initial, onSave, onCancel, focusOnMoun
     if (!accepted) return;
     pendingAdd.current = null;
     setAdded(true);
+    onAddedRef.current?.();
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
     feedbackTimer.current = setTimeout(() => setAdded(false), 1600);
   }, [lines]);
@@ -43,6 +59,14 @@ export function ItemCustomization({ item, initial, onSave, onCancel, focusOnMoun
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
   }, []);
   const formRef = useRef<HTMLFormElement>(null);
+  // "Add a note" swaps the button for the text box; move focus there so keyboard users land in it.
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+  const focusNote = useRef(false);
+  useEffect(() => {
+    if (!noteOpen || !focusNote.current) return;
+    focusNote.current = false;
+    noteRef.current?.focus();
+  }, [noteOpen]);
   useEffect(() => {
     if (!focusOnMount) return;
     // Only an explicitly opened editor moves focus; ordinary cart updates do not.
@@ -51,9 +75,14 @@ export function ItemCustomization({ item, initial, onSave, onCancel, focusOnMoun
     firstEnabled?.focus();
   }, [focusOnMount]);
   const options = menuItems(menu).filter((candidate) => candidate.isActive && /^G(?:[2-6]|9|10)$/.test(candidate.code));
-  const control = "mt-1 min-h-11 w-full rounded border border-[#6B6560] bg-white p-2 text-[#1C1917] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3A8F]";
+  const size = item.sizes.find((candidate) => candidate.id === sizeId);
+  const total = size ? formatCents(size.priceCents * quantity) : "";
+  const disabled = !ready || !item.isAvailable || !item.isActive;
+  const setQty = (next: number) => setQuantity(Math.min(50, Math.max(1, next)));
+  const label = "mb-2 text-sm font-bold uppercase tracking-wide text-muted";
+  const stepButton = "flex h-11 w-11 items-center justify-center rounded-full text-2xl font-bold enabled:hover:bg-tile focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:opacity-30";
   return (
-    <form ref={formRef} className="mt-4 space-y-3" aria-label={`Customize ${item.name}`} onInvalid={() => { setAdded(false); pendingAdd.current = null; }} onSubmit={(event) => {
+    <form ref={formRef} aria-label={`Customize ${item.name}`} onInvalid={() => { setAdded(false); pendingAdd.current = null; }} onSubmit={(event) => {
       event.preventDefault();
       setAdded(false);
       pendingAdd.current = null;
@@ -65,37 +94,56 @@ export function ItemCustomization({ item, initial, onSave, onCancel, focusOnMoun
       onSave(selection);
       setError("");
     }}>
-      <fieldset disabled={!ready || !item.isAvailable || !item.isActive} className="space-y-3 disabled:opacity-60">
-        <legend className="font-semibold">{initial ? "Edit options" : "Item options"}</legend>
-        {item.sizes.length > 1 && <div>
-          <label htmlFor={`${id}-size`}>Size</label>
-          <select id={`${id}-size`} className={control} value={sizeId} required onChange={(event) => setSizeId(event.target.value)}>
-            {item.sizes.map((size) => <option key={size.id} value={size.id}>{sizeLabel(size.name)} — {formatCents(size.priceCents)}</option>)}
-          </select>
-        </div>}
-        {item.code === "G1" && <fieldset className="space-y-3">
-          <legend className="text-sm">Choose exactly two halves; the same dish may be chosen twice.</legend>
-          {[0, 1].map((index) => <div key={index}>
-            <label htmlFor={`${id}-half-${index}`}>Half order {index + 1}</label>
-            <select id={`${id}-half-${index}`} className={control} value={halves[index] ?? ""} required onChange={(event) => setHalves((current) => current.map((code, position) => position === index ? event.target.value : code))}>
-              <option value="">Choose a dish</option>
-              {options.map((option) => <option key={option.id} value={option.code} disabled={!option.isAvailable}>{option.code} — {option.name}{!option.isAvailable && " (sold out)"}</option>)}
-            </select>
-          </div>)}
+      <fieldset disabled={disabled} className="min-w-0 space-y-5 disabled:opacity-60">
+        <legend className="sr-only">{initial ? "Edit options" : "Item options"}</legend>
+        {item.sizes.length > 1 && <fieldset>
+          <legend className={label}>Size</legend>
+          <div className="flex flex-wrap gap-2">
+            {item.sizes.map((option) => <label key={option.id} className="relative">
+              <input type="radio" name={`${id}-size`} className="peer sr-only" checked={sizeId === option.id} onChange={() => setSizeId(option.id)} />
+              <span className={chip}>{sizeLabel(option.name)}&nbsp;·&nbsp;<span className="tabular-nums">{formatCents(option.priceCents)}</span></span>
+            </label>)}
+          </div>
         </fieldset>}
-        {supportsSpicy(item) && <label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={spicy} onChange={(event) => setSpicy(event.target.checked)} className="h-5 w-5 accent-[#1A3A8F] focus-visible:outline-2 focus-visible:outline-offset-2" />Make it spicy</label>}
-        <div><label htmlFor={`${id}-instructions`}>Special instructions (optional)</label>
-          <textarea id={`${id}-instructions`} value={instructions} maxLength={200} rows={2} className={control} aria-describedby={`${id}-hint`} onChange={(event) => setInstructions(event.target.value)} />
-          <p id={`${id}-hint`} className="text-sm">Maximum 200 characters.</p>
-        </div>
-        <div><label htmlFor={`${id}-quantity`}>Quantity</label><input id={`${id}-quantity`} type="number" min={1} max={50} required value={Number.isNaN(quantity) ? "" : quantity} className={control} onChange={(event) => setQuantity(event.target.valueAsNumber)} /></div>
-        <button type="submit" className={`inline-flex min-h-11 min-w-36 items-center justify-center gap-2 rounded px-4 py-2 font-semibold text-white motion-safe:transition-colors motion-safe:duration-150 focus-visible:ring-4 focus-visible:ring-[#1A3A8F]/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3A8F] disabled:cursor-not-allowed disabled:bg-[#6B6560] disabled:text-white ${added ? "bg-[#15803D] enabled:hover:bg-[#166534] enabled:active:bg-[#14532D]" : "bg-[#D32F2F] enabled:hover:bg-[#B91C1C] enabled:active:bg-[#991B1B]"}`}>
-          {added && <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-5 w-5"><path d="m4 10 4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-          {initial ? "Save changes" : added ? "Added!" : "Add to cart"}
-        </button>
+        {item.code === "G1" && <p className="text-sm font-semibold">Choose exactly two half orders. You may choose the same dish twice.</p>}
+        {item.code === "G1" && [0, 1].map((index) => <fieldset key={index}>
+          <legend className={label}>Half order {index + 1}</legend>
+          <div className="flex flex-wrap gap-2">
+            {options.map((option) => <label key={option.id} className="relative">
+              <input type="radio" name={`${id}-half-${index}`} className="peer sr-only" disabled={!option.isAvailable}
+                checked={halves[index] === option.code}
+                onChange={() => setHalves((current) => current.map((code, position) => position === index ? option.code : code))} />
+              <span className={chip}>{option.name}{!option.isAvailable && " (sold out)"}</span>
+            </label>)}
+          </div>
+        </fieldset>)}
+        {supportsSpicy(item) && <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-2xl border-2 border-ink bg-paper px-4">
+          <span className="font-semibold">Make it spicy</span>
+          <input type="checkbox" role="switch" checked={spicy} onChange={(event) => setSpicy(event.target.checked)} className="peer sr-only" />
+          <span aria-hidden="true" className="relative h-7 w-12 shrink-0 rounded-full border-2 border-ink bg-tile motion-safe:transition-colors peer-checked:bg-brand-red peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-blue after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border-2 after:border-ink after:bg-paper after:transition-transform peer-checked:after:translate-x-5" />
+        </label>}
+        {noteOpen ? <div>
+          <label htmlFor={`${id}-instructions`} className={`block ${label}`}>Note for the kitchen</label>
+          <textarea ref={noteRef} id={`${id}-instructions`} value={instructions} maxLength={200} rows={2} placeholder="No onions, extra sauce…" aria-describedby={`${id}-hint`}
+            className="block w-full rounded-2xl border-2 border-ink bg-paper p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue" onChange={(event) => setInstructions(event.target.value)} />
+          <p id={`${id}-hint`} className="mt-1 text-right text-xs text-muted">{instructions.length}/200</p>
+        </div> : <button type="button" onClick={() => { focusNote.current = true; setNoteOpen(true); }} className="inline-flex min-h-11 items-center gap-2 rounded-full px-1 font-semibold text-brand-blue underline decoration-2 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue">
+          <span aria-hidden="true">+</span> Add a note for the kitchen
+        </button>}
       </fieldset>
-      {onCancel && <button type="button" onClick={onCancel} className="min-h-11 rounded px-3 py-2 text-[#1A3A8F] underline hover:bg-[#1A3A8F]/10 active:bg-[#1A3A8F]/20 motion-safe:transition-colors motion-safe:duration-150 focus-visible:ring-4 focus-visible:ring-[#1A3A8F]/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3A8F] disabled:cursor-not-allowed disabled:opacity-50">Cancel editing</button>}
-      <p role="alert" className="text-sm text-[#B91C1C]">{error}</p>
+      <p role="alert" className="mt-3 text-sm font-semibold text-brand-red-dark">{error}</p>
+      <div className={`mt-4 flex flex-wrap items-center gap-3 ${inSheet ? "sticky bottom-0 -mx-5 border-t-2 border-ink bg-cream px-5 py-4" : "py-2"}`}>
+        <div role="group" aria-label="Quantity" className="flex items-center rounded-full border-2 border-ink bg-paper">
+          <button type="button" disabled={disabled || quantity <= 1} aria-label="Decrease quantity" onClick={() => setQty(quantity - 1)} className={stepButton}>−</button>
+          <output aria-live="polite" className="min-w-8 text-center text-lg font-bold tabular-nums">{quantity}</output>
+          <button type="button" disabled={disabled || quantity >= 50} aria-label="Increase quantity" onClick={() => setQty(quantity + 1)} className={stepButton}>+</button>
+        </div>
+        <button type="submit" disabled={disabled} className={`${btnPrimary} min-w-0 flex-1`}>
+          {initial ? "Save changes" : added ? "Added ✓" : "Add to cart"}
+          {total && <span className="rounded-full bg-ink/20 px-2 py-0.5 tabular-nums">{total}</span>}
+        </button>
+        {onCancel && <button type="button" onClick={onCancel} className={`${btnSecondary} w-full`}>Cancel editing</button>}
+      </div>
     </form>
   );
 }
