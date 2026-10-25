@@ -24,11 +24,14 @@ import type { CartState, CartSelection, CartLine } from "@/lib/cart";
 import type { BusinessHour, MenuCategory, Settings } from "@/lib/types";
 import { formatCents } from "@/lib/money";
 import { SiteHeader } from "./site-header";
+import { useOpenNow } from "./open-status";
 
 interface CartContextValue extends CartState {
   menu: MenuCategory[];
   settings: Settings | null;
   businessHours: BusinessHour[] | null;
+  /** False when the restaurant is closed right now (ordering is off); null when unknown, e.g. hours failed to load. */
+  ordersOpen: boolean | null;
   subtotalCents: number | null;
   add: (selection: CartSelection) => void;
   edit: (id: string, selection: CartSelection) => void;
@@ -45,10 +48,13 @@ interface CartContextValue extends CartState {
 }
 const CartContext = createContext<CartContextValue | null>(null);
 
+const CLOSED_MESSAGE =
+  "We're closed right now, so ordering is off. You can still lower quantities or remove items.";
+
 export function CartProvider({
   menu,
   settings,
-  businessHours,
+  businessHours: loadedHours,
   children,
 }: {
   menu: MenuCategory[];
@@ -65,6 +71,17 @@ export function CartProvider({
   const restored = useRef(false);
   const currentState = useRef(state);
   currentState.current = state;
+  // An empty list means the hours are unknown, not "closed every day": treat it like hours that failed to load.
+  const businessHours =
+    loadedHours && loadedHours.length > 0 ? loadedHours : null;
+  const ordersOpen = useOpenNow(businessHours);
+  const closed = ordersOpen === false;
+  // Counts refused changes so the header can show a toast for them (the cart lines did not change).
+  const [noticeSeq, setNoticeSeq] = useState(0);
+  const refuse = () => {
+    setNoticeSeq((seq) => seq + 1);
+    dispatch({ type: "notice", message: CLOSED_MESSAGE });
+  };
   useEffect(() => {
     // Restore once. Later server menu refreshes must not replace in-memory edits.
     if (restored.current) return;
@@ -109,25 +126,38 @@ export function CartProvider({
         menu,
         settings,
         businessHours,
+        ordersOpen,
         subtotalCents,
+        // While closed, nothing can be added or increased (decreases and removal stay allowed). The buttons
+        // are disabled too, but this is the rule, so no other screen can get around it.
         add: (selection) =>
-          dispatch({
-            type: "save",
-            line: { id: crypto.randomUUID(), ...selectionPayload(selection) },
-            menu,
-            editing: false,
-          }),
-        edit: (id, selection) =>
-          dispatch({
-            type: "save",
-            line: {
-              id,
-              revision: crypto.randomUUID(),
-              ...selectionPayload(selection),
-            },
-            menu,
-            editing: true,
-          }),
+          closed
+            ? refuse()
+            : dispatch({
+                type: "save",
+                line: {
+                  id: crypto.randomUUID(),
+                  ...selectionPayload(selection),
+                },
+                menu,
+                editing: false,
+              }),
+        edit: (id, selection) => {
+          const existing = state.lines.find((line) => line.id === id);
+          if (closed && existing && selection.quantity > existing.quantity)
+            refuse();
+          else
+            dispatch({
+              type: "save",
+              line: {
+                id,
+                revision: crypto.randomUUID(),
+                ...selectionPayload(selection),
+              },
+              menu,
+              editing: true,
+            });
+        },
         remove: (id) => dispatch({ type: "remove", id }),
         clear: () => dispatch({ type: "clear" }),
         prepareCheckoutLines: () => {
@@ -171,11 +201,13 @@ export function CartProvider({
     >
       <SiteHeader
         businessHours={businessHours}
+        ordersOpen={ordersOpen}
         ready={state.ready}
         count={count}
         subtotalLabel={subtotalLabel}
         message={state.message}
         actionKey={state.lines}
+        noticeSeq={noticeSeq}
         invalidLines={invalidLines}
         storageError={storageError}
       />

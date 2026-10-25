@@ -43,7 +43,8 @@ export type CartAction =
   | { type: "save"; line: CartLine; menu: MenuCategory[]; editing: boolean }
   | { type: "paid"; lines: CartLine[] }
   | { type: "remove"; id: string }
-  | { type: "clear" };
+  | { type: "clear" }
+  | { type: "notice"; message: string };
 
 /** Same dish with the same options: size, spicy, note and half orders. */
 export function sameSelection(a: CartSelection, b: CartSelection): boolean {
@@ -61,6 +62,7 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
       lines: action.lines,
       message: "Paid order items removed from your cart.",
     };
+  if (action.type === "notice") return { ...state, message: action.message };
   if (action.type === "clear")
     return { ...state, lines: [], message: "Cart cleared." };
   if (action.type === "remove")

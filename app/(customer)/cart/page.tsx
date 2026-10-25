@@ -6,6 +6,7 @@ import { menuItems, resolveSize, validateSelection } from "@/lib/cart";
 import { formatCents } from "@/lib/money";
 import { useCart } from "../cart-provider";
 import { ItemCustomization } from "../item-customization";
+import { CartTotals } from "../cart-totals";
 import { btnPrimary, btnSecondary } from "@/lib/ui";
 import { sizeLabel } from "@/lib/menu-display";
 
@@ -147,7 +148,11 @@ export default function Page() {
                             <button
                               type="button"
                               className={button}
-                              disabled={line.quantity >= 50 || !!error}
+                              disabled={
+                                line.quantity >= 50 ||
+                                !!error ||
+                                cart.ordersOpen === false
+                              }
                               aria-label={`Increase quantity for ${name}, line ${index + 1}`}
                               onClick={() =>
                                 cart.edit(line.id, {
@@ -194,18 +199,10 @@ export default function Page() {
               })}
             </ul>
             <div className="sticker mt-8 rounded-card bg-paper p-4 sm:p-6">
-              <p className="flex flex-wrap justify-between gap-3 break-words text-xl font-semibold">
-                <span>Subtotal</span>
-                <span className="tabular-nums">
-                  {cart.subtotalCents === null
-                    ? "Price unavailable"
-                    : formatCents(cart.subtotalCents)}
-                </span>
-              </p>
-              <p className="mt-2 text-sm">
-                Tax is excluded. Prices and availability are verified by the
-                server when placing your order.
-              </p>
+              <CartTotals
+                subtotalCents={cart.subtotalCents}
+                taxRateBps={cart.settings?.taxRateBps ?? null}
+              />
               <button
                 type="button"
                 className={`${destructiveButton} mt-4`}

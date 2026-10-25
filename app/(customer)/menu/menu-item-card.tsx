@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatCents } from "@/lib/money";
 import { MAX_LINES, MAX_QUANTITY } from "@/lib/cart";
+import { allergenNotice } from "@/lib/allergens";
 import { linesForItem, quantityOf } from "@/lib/cart-counts";
 import type { MenuItem } from "@/lib/types";
 import { MenuThumb } from "@/components/menu-thumb";
@@ -19,7 +20,7 @@ const stepButton =
  * first plus. Tapping the name or the tile opens the sheet for size, spicy, or a note.
  */
 export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: number; index: number }) {
-  const { lines, ready, add, edit, remove } = useCart();
+  const { lines, ready, ordersOpen, add, edit, remove } = useCart();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const plusRef = useRef<HTMLButtonElement>(null);
@@ -31,6 +32,8 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
   const last = itemLines[itemLines.length - 1];
   const quantity = quantityOf(itemLines);
   const canOrder = item.isAvailable && item.isActive;
+  const closed = ordersOpen === false;
+  const allergen = allergenNotice(item.description);
   const needsChoice = item.code === "G1" || item.sizes.length > 1;
   const cartFull = !last && lines.length >= MAX_LINES;
   const lowest = Math.min(...item.sizes.map((size) => size.priceCents));
@@ -82,6 +85,12 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
           {item.isSpicyFlag && <span className="rounded-md bg-brand-red px-1.5 py-0.5 text-xs font-bold text-white"><span aria-hidden="true">★ </span>Spicy</span>}
           {item.isCatering && <span className="rounded-md bg-mustard px-1.5 py-0.5 text-xs font-bold text-ink">Catering</span>}
         </div>
+        {allergen && (
+          <p className="mt-2 inline-flex items-center gap-1.5 self-start rounded-md border-2 border-ink bg-mustard px-2 py-0.5 text-xs font-bold text-ink">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 2.5 20h19L12 3Z" /><path d="M12 10v5M12 18v.01" /></svg>
+            <span className="sr-only">Allergen warning: </span>{allergen}
+          </p>
+        )}
         <h3 id={`item-${item.id}`} className="mt-2 text-base font-extrabold leading-snug sm:text-lg">
           <button
             ref={nameRef}
@@ -113,7 +122,7 @@ export function MenuItemCard({ item, tone, index }: { item: MenuItem; tone: numb
             <button
               ref={plusRef}
               type="button"
-              disabled={!canOrder || !ready || cartFull || (last ? last.quantity >= MAX_QUANTITY : false)}
+              disabled={!canOrder || !ready || closed || cartFull || (last ? last.quantity >= MAX_QUANTITY : false)}
               onClick={plus}
               aria-label={`Add one ${item.name}`}
               className={`${stepButton} bg-brand-red text-white enabled:hover:bg-brand-red-dark`}

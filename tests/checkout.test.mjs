@@ -932,6 +932,7 @@ test("provider handles partial and persistent marker failures without dispatchin
         {},
       ),
       "./site-header": { SiteHeader: () => null },
+      "./open-status": { useOpenNow: () => null },
     };
     const loaded = { exports: {} };
     vm.runInNewContext(`(function(require,module,exports){${compiled}\n})`, {

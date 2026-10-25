@@ -107,6 +107,20 @@ Adding to the cart:
 - Header cart is a cart icon with an item-count badge plus the running subtotal. A floating cart bar
   also shows on phones.
 
+Closed, allergens and orders (for checkout and other customer screens):
+- **Closed:** `useCart().ordersOpen` is `false` when the restaurant is closed right now (`null` when the
+  hours could not be loaded or come back empty, which allows ordering; the server still enforces hours).
+  While closed the cart refuses `add` and any `edit` that raises a quantity (lowering and removing still
+  work), so a screen cannot get around it; disable your own buttons too. A banner shows under
+  the header and adding is disabled. **Checkout should disable "Place order" when `ordersOpen === false`.**
+- **Allergens:** `allergenNotice(description)` (`lib/allergens.ts`) pulls "Contains ..." out of a menu
+  description; the tile and the options sheet show it as a yellow badge so it is never cut off. A real
+  allergen field on `menu_items` would be better (an ERD change, not done).
+- **Cart totals:** `app/(customer)/cart-totals.tsx` shows subtotal, tax (same `taxCents` as the server) and total.
+- **Your order shortcut:** the order page remembers the last order in `localStorage` for 12 hours
+  (`lib/last-order.ts`); the header shows "Your order #0042" while it is not finished.
+- `/` redirects to `/menu` (`next.config.ts`); `app/not-found.tsx` and `app/error.tsx` are branded.
+
 Logo: the restaurant's cat-and-ramen mark is the favicon and Apple touch icon (`app/icon.png`,
 `app/apple-icon.png`) and sits beside the wordmark in the header and footer
 (`public/brand/chopstix-mark.webp`).
