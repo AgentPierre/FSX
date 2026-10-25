@@ -106,7 +106,12 @@ export function validateCustomer(customer: CreateOrderInput["customer"]) {
 /** Retain an already-created session when only persistence/navigation needs another attempt. */
 export function createCheckoutSubmission() {
   let active = false;
-  let session: { key: string; url: string } | null = null;
+  let session: {
+    key: string;
+    url: string;
+    orderId?: string;
+    remember?: (id: string) => void;
+  } | null = null;
   return {
     get isActive() {
       return active;
@@ -120,6 +125,7 @@ export function createCheckoutSubmission() {
       persist: () => void,
       navigate: (url: string) => void,
       send?: typeof fetch,
+      remember?: (orderId: string) => void,
     ): Promise<boolean> {
       if (active) return false;
       active = true;
@@ -127,8 +133,20 @@ export function createCheckoutSubmission() {
       try {
         persist(); // Fail before order creation if the cart cannot survive leaving this page.
         const key = JSON.stringify(payload);
-        if (!session || session.key !== key)
-          session = { key, url: await requestCheckout(payload, send) };
+        if (!session || session.key !== key) {
+          let orderId: string | undefined;
+          const url = await requestCheckout(payload, send, (id) => {
+            orderId = id;
+          });
+          session = { key, url, orderId, remember };
+        }
+        if (remember) {
+          if (!session.orderId)
+            throw new Error(
+              "Checkout returned no order reference. Your cart is preserved.",
+            );
+          session.remember?.(session.orderId);
+        }
         persist(); // Recheck the current cart after awaiting the API, immediately before leaving.
         navigate(session.url);
         redirected = true;
@@ -138,26 +156,6 @@ export function createCheckoutSubmission() {
       }
     },
   };
-}
-
-export function hoursDescription(hours: BusinessHour[]): string {
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  const clock = (minutes: number) =>
-    `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-  return hours
-    .map(
-      (day) =>
-        `${days[day.dayOfWeek]}: ${day.openMinutes === null || day.closeMinutes === null ? "closed" : `${clock(day.openMinutes)}–${clock(day.closeMinutes)}`}`,
-    )
-    .join("; ");
 }
 
 export function earliestInput(now: Date, lead: number): string {
@@ -190,6 +188,7 @@ export function checkoutFailure(body: unknown): string {
 export async function requestCheckout(
   payload: CreateOrderInput,
   send: typeof fetch = fetch,
+  created?: (orderId: string) => void,
 ): Promise<string> {
   let response: Response;
   let body;
@@ -210,6 +209,8 @@ export async function requestCheckout(
     const url = new URL(body?.checkoutUrl);
     if (url.protocol !== "https:" || url.hostname !== "checkout.stripe.com")
       throw new Error();
+    if (typeof body.orderId === "string" && body.orderId)
+      created?.(body.orderId);
     return url.href;
   } catch {
     throw new Error(

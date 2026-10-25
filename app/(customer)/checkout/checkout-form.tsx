@@ -11,10 +11,11 @@ import {
   validateCustomer,
   checkoutLead,
   earliestInput,
-  hoursDescription,
   houstonInstant,
   pickupError,
 } from "@/lib/checkout";
+import { businessHoursLabel } from "@/lib/menu-display";
+import { CUSTOMER_LIMITS } from "@/lib/validation";
 import { formatCents, taxCents } from "@/lib/money";
 import { btnPrimary, btnSecondary } from "@/lib/ui";
 
@@ -149,10 +150,16 @@ export function CheckoutForm() {
     let redirecting = false;
     try {
       const payload = buildCheckoutPayload(validated.data, instant, lines);
+      const submitted = cart.lines.map((line) => ({
+        ...line,
+        components: [...line.components],
+      }));
       redirecting = await submission.submit(
         payload,
         cart.persistForCheckout,
         (url) => window.location.assign(url),
+        undefined,
+        (id) => cart.rememberCheckout(id, submitted),
       );
     } catch (failure) {
       setError(
@@ -260,9 +267,27 @@ export function CheckoutForm() {
             </legend>
             {(
               [
-                ["name", "Name (required)", "text", 100, "name"],
-                ["email", "Email (required)", "email", 254, "email"],
-                ["phone", "Phone (optional)", "tel", 30, "tel"],
+                [
+                  "name",
+                  "Name (required)",
+                  "text",
+                  CUSTOMER_LIMITS.name,
+                  "name",
+                ],
+                [
+                  "email",
+                  "Email (required)",
+                  "email",
+                  CUSTOMER_LIMITS.email,
+                  "email",
+                ],
+                [
+                  "phone",
+                  "Phone (optional)",
+                  "tel",
+                  CUSTOMER_LIMITS.phone,
+                  "tel",
+                ],
               ] as const
             ).map(([name, label, type, maxLength, autoComplete]) => (
               <div key={name}>
@@ -274,7 +299,7 @@ export function CheckoutForm() {
                   name={name}
                   type={type}
                   autoComplete={autoComplete}
-                  maxLength={name === "email" ? maxLength : undefined}
+                  maxLength={maxLength}
                   required={name !== "phone"}
                   aria-invalid={!!fields[name]}
                   aria-describedby={fields[name] ? `${name}-error` : undefined}
@@ -308,7 +333,7 @@ export function CheckoutForm() {
               />
               <p id="pickup-help" className="mt-2 text-sm">
                 Pickup only. Allow at least {lead} minutes. All times are
-                America/Chicago. {hoursDescription(businessHours)}
+                Houston time. {businessHoursLabel(businessHours)}
               </p>
               <p
                 id="pickup-error"

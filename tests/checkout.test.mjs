@@ -85,6 +85,7 @@ test("checkout immediately renders unavailable hours before pickup selection", (
       target: ts.ScriptTarget.ES2022,
     },
   }).outputText;
+  let displayedHours = businessHours.filter((day) => day.dayOfWeek !== 3);
   const dependencies = {
     react: {
       useState: (initial) => [
@@ -98,18 +99,23 @@ test("checkout immediately renders unavailable hours before pickup selection", (
       useEffect: () => {},
       useRef: () => ({ current: null }),
     },
-    "next/link": () => null,
+    "next/link": { default: () => null },
     "../cart-provider": {
       useCart: () => ({
         ready: true,
-        lines: [line],
+        lines: [{ id: "test-line", ...line }],
         menu,
         subtotalCents: 1299,
         settings,
-        businessHours: businessHours.filter((day) => day.dayOfWeek !== 3),
+        businessHours: displayedHours,
       }),
     },
     "@/lib/cart": cart,
+    "@/lib/menu-display": loadModule(
+      new URL("../lib/menu-display.ts", import.meta.url),
+      {},
+    ),
+    "@/lib/validation": validation,
     "@/lib/checkout": checkout,
     "@/lib/money": loadModule(new URL("../lib/money.ts", import.meta.url), {}),
     "@/lib/ui": { btnPrimary: "", btnSecondary: "" },
@@ -133,6 +139,17 @@ test("checkout immediately renders unavailable hours before pickup selection", (
   assert.match(html, /Pickup information is unavailable/);
   assert.match(html, /role="alert"/);
   assert.doesNotMatch(html, /Online ordering is currently closed/);
+  displayedHours = businessHours;
+  const checkoutHtml = renderToStaticMarkup(
+    React.createElement(loaded.exports.CheckoutForm),
+  );
+  assert.match(checkoutHtml, /id="name"[^>]*maxLength="100"/);
+  assert.match(checkoutHtml, /id="phone"[^>]*maxLength="30"/);
+  assert.match(checkoutHtml, /id="email"[^>]*maxLength="254"/);
+  assert.match(checkoutHtml, /Houston time/);
+  assert.match(checkoutHtml, /11 am/);
+  assert.match(checkoutHtml, /9 pm/);
+  assert.doesNotMatch(checkoutHtml, /America\/Chicago|11:00|21:00/);
 });
 
 test("customer schema matches required names, emails and optional phone limits", () => {
@@ -625,4 +642,443 @@ test("checkout sends one POST, returns the hosted URL, and never retries failed 
     })),
     /cart is preserved/,
   );
+});
+
+test("confirmed paid cleanup removes only submitted unchanged lines and survives refresh", () => {
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+  };
+  const submitted = [
+    { id: "one", ...line },
+    { id: "two", ...line },
+  ];
+  cart.persistCheckoutSnapshot("paid", submitted, storage);
+  const modified = { ...submitted[1], revision: "edited", quantity: 2 };
+  const added = { id: "new", ...line };
+  const current = [submitted[0], modified, added];
+  const order = { id: "paid", paymentStatus: "paid", ticketStatus: "received" };
+  const remaining = cart.paidCartCleanup(order, current, storage);
+  assert.deepEqual(remaining, [modified, added]);
+  assert.equal(
+    storage.getItem(cart.CART_STORAGE_KEY),
+    cart.serializeCart(remaining),
+  );
+  assert.equal(cart.paidCartCleanup(order, remaining, storage), remaining);
+  assert.equal(
+    cart.paidCartCleanup(order, [submitted[0]], storage)[0],
+    submitted[0],
+  );
+});
+
+test("pending, failed, expired, cancelled and unrelated orders preserve the cart", () => {
+  for (const [paymentStatus, ticketStatus] of [
+    ["pending_payment", null],
+    ["failed", null],
+    ["expired", null],
+    ["paid", "cancelled"],
+  ]) {
+    const values = new Map();
+    const storage = {
+      getItem: (key) => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, value),
+    };
+    const lines = [{ id: "one", ...line }];
+    cart.persistCheckoutSnapshot("order", lines, storage);
+    assert.equal(
+      cart.paidCartCleanup(
+        { id: "order", paymentStatus, ticketStatus },
+        lines,
+        storage,
+      ),
+      lines,
+    );
+    assert.equal(
+      cart.paidCartCleanup(
+        { id: "other", paymentStatus: "paid", ticketStatus: "received" },
+        lines,
+        storage,
+      ),
+      lines,
+    );
+  }
+});
+
+test("edited then reverted selections and restored revisions remain protected", () => {
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+  };
+  cart.persistCheckoutSnapshot("order", [{ id: "one", ...line }], storage);
+  const changed = [{ id: "one", revision: "new-revision", ...line }];
+  cart.persistCart(changed, storage);
+  const restored = cart.restoreCart(
+    storage.getItem(cart.CART_STORAGE_KEY),
+    menu,
+  ).lines;
+  assert.equal(restored[0].revision, "new-revision");
+  assert.equal(
+    cart.paidCartCleanup(
+      { id: "order", paymentStatus: "paid", ticketStatus: "ready" },
+      restored,
+      storage,
+    ).length,
+    1,
+  );
+});
+
+test("paid cleanup fails safely when cart storage readback fails", () => {
+  const lines = [{ id: "one", ...line }];
+  const snapshot = cart.serializeCart(lines);
+  const storage = {
+    getItem: (key) => (key === cart.CART_STORAGE_KEY ? "stale" : snapshot),
+    setItem() {},
+  };
+  assert.throws(() =>
+    cart.paidCartCleanup(
+      { id: "order", paymentStatus: "paid", ticketStatus: "received" },
+      lines,
+      storage,
+    ),
+  );
+  assert.equal(lines.length, 1);
+});
+
+test("customer validation uses plain messages and keeps phone optional", () => {
+  const result = checkout.validateCustomer({
+    name: " ",
+    email: "bad",
+    phone: "1".repeat(31),
+  });
+  assert.equal(result.success, false);
+  assert.deepEqual(
+    Array.from(result.error.issues, (issue) => issue.message),
+    [
+      "Enter your name.",
+      "Enter a valid email address.",
+      "Use 30 characters or fewer for your phone number.",
+    ],
+  );
+  assert.equal(
+    checkout.validateCustomer({ ...customer, phone: "" }).success,
+    true,
+  );
+});
+
+test("submission records the original order snapshot before redirect and retains it on navigation retry", async () => {
+  const submission = checkout.createCheckoutSubmission();
+  const payload = checkout.buildCheckoutPayload(customer, now, [line]);
+  const events = [];
+  let requests = 0;
+  const send = async () => {
+    requests++;
+    return {
+      ok: true,
+      json: async () => ({
+        orderId: "original",
+        checkoutUrl: "https://checkout.stripe.com/test",
+      }),
+    };
+  };
+  await assert.rejects(
+    submission.submit(
+      payload,
+      () => {},
+      () => {
+        throw new Error("navigation blocked");
+      },
+      send,
+      (id) => events.push(id),
+    ),
+    /navigation blocked/,
+  );
+  await submission.submit(
+    payload,
+    () => {},
+    () => events.push("redirect"),
+    send,
+    () => assert.fail("replaced original snapshot callback"),
+  );
+  assert.equal(requests, 1);
+  assert.deepEqual(events, ["original", "original", "redirect"]);
+});
+
+test("snapshot writes require exact readback and retries cannot overwrite an order snapshot", () => {
+  const lines = [{ id: "one", ...line }];
+  assert.throws(() =>
+    cart.persistCheckoutSnapshot("order", lines, {
+      getItem: () => null,
+      setItem() {},
+    }),
+  );
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+  };
+  cart.persistCheckoutSnapshot("order", lines, storage);
+  cart.persistCheckoutSnapshot("order", lines, storage);
+  assert.throws(() =>
+    cart.persistCheckoutSnapshot(
+      "order",
+      [{ ...lines[0], quantity: 2 }],
+      storage,
+    ),
+  );
+});
+
+test("provider handles partial and persistent marker failures without dispatching unchanged carts", () => {
+  const React = require("react");
+  const source = readFileSync(
+    new URL("../app/(customer)/cart-provider.tsx", import.meta.url),
+    "utf8",
+  );
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      jsx: ts.JsxEmit.React,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  for (const failure of [
+    "read throws",
+    "read mismatch",
+    "write throws",
+    "persistent write throws",
+    "persistent read mismatch",
+  ]) {
+    const persistent = failure.startsWith("persistent ");
+    const mode = failure.replace("persistent ", "");
+    const submitted = [
+      { id: "paid", ...line },
+      { id: "modified", ...line },
+    ];
+    const modified = { ...submitted[1], revision: "edited", quantity: 2 };
+    const newer = { id: "newer", ...line };
+    const expected = [modified, newer];
+    let reactState = {
+      lines: [submitted[0], ...expected],
+      ready: true,
+      message: "",
+    };
+    const original = reactState;
+    const values = new Map();
+    const key = "chopstix-checkout-order";
+    let armed = false;
+    let faultObserved = false;
+    const storage = {
+      getItem(name) {
+        if (
+          armed &&
+          name === key &&
+          values.get(key) === "" &&
+          mode !== "write throws"
+        ) {
+          armed = false;
+          faultObserved = true;
+          if (mode === "read throws") throw new Error("marker read failed");
+          return "stale marker";
+        }
+        return values.get(name) ?? null;
+      },
+      setItem(name, value) {
+        if (armed && name === key && value === "" && mode === "write throws") {
+          if (!persistent) armed = false;
+          faultObserved = true;
+          throw new Error("marker write failed");
+        }
+        if (
+          armed &&
+          name === key &&
+          value === "" &&
+          persistent &&
+          mode === "read mismatch"
+        ) {
+          // Keep returning the original snapshot: marker writes never stick.
+          faultObserved = true;
+          return;
+        }
+        values.set(name, value);
+      },
+    };
+    cart.persistCheckoutSnapshot("order", submitted, storage);
+    cart.persistCart(reactState.lines, storage);
+    const pending = [];
+    const refs = [];
+    let refIndex = 0;
+    let effects = [];
+    let storageError = "";
+    const dependencies = {
+      react: {
+        createContext: React.createContext,
+        useReducer: () => [reactState, (action) => pending.push(action)],
+        useState: () => [
+          storageError,
+          (value) => {
+            storageError = value;
+          },
+        ],
+        useRef: (initial) => {
+          const index = refIndex++;
+          return (refs[index] ??= { current: initial });
+        },
+        useEffect: (effect) => effects.push(effect),
+      },
+      "@/lib/cart": cart,
+      "@/lib/money": loadModule(
+        new URL("../lib/money.ts", import.meta.url),
+        {},
+      ),
+      "./site-header": { SiteHeader: () => null },
+    };
+    const loaded = { exports: {} };
+    vm.runInNewContext(`(function(require,module,exports){${compiled}\n})`, {
+      React,
+      sessionStorage: storage,
+      crypto: require("node:crypto").webcrypto,
+    })(
+      (name) => {
+        assert.ok(name in dependencies, `Unexpected dependency: ${name}`);
+        return dependencies[name];
+      },
+      loaded,
+      loaded.exports,
+    );
+    const render = () => {
+      refIndex = 0;
+      effects = [];
+      return loaded.exports.CartProvider({
+        menu,
+        settings,
+        businessHours,
+        children: null,
+      }).props.value;
+    };
+    const flush = () => {
+      while (pending.length)
+        reactState = cart.cartReducer(reactState, pending.shift());
+    };
+    const order = {
+      id: "order",
+      paymentStatus: "paid",
+      ticketStatus: "received",
+    };
+    let context = render();
+    armed = true;
+    context.cleanupPaidOrder(order);
+    assert.equal(faultObserved, true);
+    assert.equal(pending.length, 1, "publish the cleaned cart exactly once");
+    assert.equal(
+      reactState,
+      original,
+      "React has not committed the queued update yet",
+    );
+    assert.match(storageError, /cleanup could not be saved/);
+    assert.equal(
+      values.get(cart.CART_STORAGE_KEY),
+      cart.serializeCart(expected),
+    );
+    if (mode !== "write throws" && !persistent)
+      assert.equal(values.get(key), "");
+    // The parent persistence effect can still belong to the stale render.
+    effects[1]();
+    context.persistForCheckout();
+    assert.equal(
+      values.get(cart.CART_STORAGE_KEY),
+      cart.serializeCart(expected),
+    );
+    // Queue a real cart operation before React processes the cleanup update.
+    context.edit(newer.id, { ...newer, quantity: 3 });
+    flush();
+    context = render();
+    effects[1]();
+    assert.equal(
+      reactState.lines.some((entry) => entry.id === "paid"),
+      false,
+    );
+    assert.equal(
+      reactState.lines.find((entry) => entry.id === "newer").quantity,
+      3,
+    );
+    assert.equal(
+      reactState.lines.find((entry) => entry.id === "modified").revision,
+      "edited",
+    );
+    if (persistent) {
+      const unchangedState = reactState;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const previousError = storageError;
+        faultObserved = false;
+        context.cleanupPaidOrder(order);
+        assert.equal(
+          faultObserved,
+          true,
+          "marker failure persists on every attempt",
+        );
+        assert.equal(pending.length, 0, "unchanged cleanup must not dispatch");
+        // persistForCheckout cleared the warning earlier. The first retry may
+        // restore it once; subsequent identical warnings do not change state.
+        if (attempt > 0)
+          assert.equal(
+            storageError,
+            previousError,
+            "same error cannot trigger another render",
+          );
+        flush();
+        assert.equal(reactState, unchangedState);
+        context = render();
+        effects[1]();
+        assert.equal(
+          values.get(cart.CART_STORAGE_KEY),
+          cart.serializeCart(reactState.lines),
+        );
+      }
+      // Storage recovers later; complete consumption without changing the cart.
+      armed = false;
+      context.cleanupPaidOrder(order);
+      assert.equal(pending.length, 0);
+      assert.equal(values.get(key), "");
+    }
+    context.cleanupPaidOrder(order);
+    flush();
+    context = render();
+    context.cleanupPaidOrder(order);
+    flush();
+    assert.equal(values.get(key), "");
+    assert.equal(
+      values.get(cart.CART_STORAGE_KEY),
+      cart.serializeCart(reactState.lines),
+    );
+    const restored = cart.restoreCart(
+      values.get(cart.CART_STORAGE_KEY),
+      menu,
+    ).lines;
+    assert.equal(restored.length, 2);
+    assert.equal(cart.paidCartCleanup(order, restored, storage), restored);
+  }
+});
+
+test("unverified cart persistence never publishes cleanup to React or consumes the snapshot", () => {
+  const current = [{ id: "paid", ...line }];
+  const raw = cart.serializeCart(current);
+  let published = false;
+  const writes = [];
+  assert.throws(() =>
+    cart.paidCartCleanup(
+      { id: "order", paymentStatus: "paid", ticketStatus: "received" },
+      current,
+      {
+        getItem: (key) => (key === cart.CART_STORAGE_KEY ? "stale" : raw),
+        setItem: (key, value) => writes.push([key, value]),
+      },
+      () => {
+        published = true;
+      },
+    ),
+  );
+  assert.equal(published, false);
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0][0], cart.CART_STORAGE_KEY);
 });
