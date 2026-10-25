@@ -1,11 +1,29 @@
 import { z } from "zod";
 import { ApiError } from "./errors";
 
+export const CUSTOMER_LIMITS = { name: 100, email: 254, phone: 30 } as const;
+
 export const createOrderSchema = z.object({
   customer: z.object({
-    name: z.string().trim().min(1).max(100),
-    email: z.email().max(254),
-    phone: z.string().trim().max(30).optional(),
+    name: z
+      .string()
+      .trim()
+      .min(1, "Enter your name.")
+      .max(CUSTOMER_LIMITS.name, "Use 100 characters or fewer for your name."),
+    email: z
+      .email("Enter a valid email address.")
+      .max(
+        CUSTOMER_LIMITS.email,
+        "Use 254 characters or fewer for your email address.",
+      ),
+    phone: z
+      .string()
+      .trim()
+      .max(
+        CUSTOMER_LIMITS.phone,
+        "Use 30 characters or fewer for your phone number.",
+      )
+      .optional(),
   }),
   pickupTime: z.iso.datetime({ offset: true }),
   lines: z
