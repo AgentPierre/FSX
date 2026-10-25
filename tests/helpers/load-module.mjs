@@ -4,13 +4,13 @@ import ts from "typescript";
 
 // Exercise real TypeScript handlers without credentials or a Next dev server.
 // Replace only external boundaries; undeclared imports fail rather than reaching a live service.
-export function loadModule(url, dependencies) {
+export function loadModule(url, dependencies, globals = {}) {
   const compiled = ts.transpileModule(readFileSync(url, "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   const loaded = { exports: {} };
   const wrapper = vm.runInNewContext(`(function(require, module, exports) { ${compiled}\n})`, {
-    process, console: { error() {} },
+    process, console: { error() {} }, ...globals,
   });
   wrapper((name) => {
     if (!(name in dependencies)) throw new Error(`Unexpected dependency: ${name}`);
