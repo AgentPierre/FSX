@@ -45,6 +45,12 @@ export type CartAction =
   | { type: "remove"; id: string }
   | { type: "clear" };
 
+/** Same dish with the same options: size, spicy, note and half orders. */
+export function sameSelection(a: CartSelection, b: CartSelection): boolean {
+  return a.sizeId === b.sizeId && a.spicy === b.spicy && a.instructions === b.instructions
+    && a.components.length === b.components.length && a.components.every((code, i) => code === b.components[i]);
+}
+
 export function cartReducer(state: CartState, action: CartAction): CartState {
   if (action.type === "restore")
     return { lines: action.lines, ready: true, message: action.message };
@@ -67,6 +73,21 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
   if (error) return { ...state, message: error };
   if (action.editing && !state.lines.some((line) => line.id === action.line.id))
     return { ...state, message: "This cart item no longer exists." };
+  if (!action.editing) {
+    const same = state.lines.find((line) => sameSelection(line, action.line));
+    if (same) {
+      const quantity = same.quantity + action.line.quantity;
+      if (quantity > MAX_QUANTITY)
+        return { ...state, message: "Quantity must be between 1 and 50." };
+      // The merged line moves to the end: the menu tile's plus and minus act on an item's most recent
+      // line, so it must be the one the customer just added to (plain, spicy, plain again leaves plain last).
+      return {
+        ...state,
+        lines: [...state.lines.filter((line) => line !== same), { ...same, quantity }],
+        message: "Item added to cart.",
+      };
+    }
+  }
   if (!action.editing && state.lines.length >= MAX_LINES)
     return { ...state, message: "Cart can contain at most 30 lines." };
   return {

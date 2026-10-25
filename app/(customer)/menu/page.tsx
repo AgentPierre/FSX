@@ -7,6 +7,7 @@ import { MenuItemCard } from "./menu-item-card";
 import { HeroArt } from "@/components/hero-art";
 import { pill } from "@/lib/ui";
 import { formatCents } from "@/lib/money";
+import { quantityByCategory } from "@/lib/cart-counts";
 
 export default function Page() {
   // The layout's server-fetched snapshot also drives customization and cart prices.
@@ -32,6 +33,7 @@ export default function Page() {
     if (panel && panel.getBoundingClientRect().top < 0) panel.scrollIntoView({ block: "start" });
   }
   const count = lines.reduce((sum, line) => sum + line.quantity, 0);
+  const categoryCounts = quantityByCategory(lines, categories);
   return (
     <main className="min-h-screen pb-24 sm:pb-0">
       <a href="#menu-items" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-30 focus:rounded focus:bg-paper focus:p-4 focus:text-brand-blue focus:outline-2 focus:outline-offset-2">Skip to menu</a>
@@ -71,6 +73,12 @@ export default function Page() {
                     className={`min-h-11 rounded-full border-2 border-ink px-4 py-2 text-sm font-bold motion-safe:transition-all motion-safe:duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue sm:text-base ${selected ? "-translate-y-0.5 bg-brand-red text-white shadow-[3px_3px_0_0_var(--color-ink)]" : "bg-paper hover:bg-tile"}`}
                   >
                     {category.name}
+                    {categoryCounts.has(category.id) && (
+                      <>
+                        <span key={categoryCounts.get(category.id)} aria-hidden="true" className="anim-pop ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-ink bg-brand-red-dark px-1 text-xs font-black tabular-nums text-white">{categoryCounts.get(category.id)}</span>
+                        <span className="sr-only">, {categoryCounts.get(category.id)} in your cart</span>
+                      </>
+                    )}
                   </button>
                 </li>
               );

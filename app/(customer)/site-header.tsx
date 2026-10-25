@@ -30,16 +30,31 @@ export function SiteHeader({ businessHours, ready, count, subtotalLabel, message
   return (
     <div className="border-b-2 border-ink bg-paper">
       <nav aria-label="Ordering navigation" className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
-        <Link href="/menu" className="inline-flex min-h-11 items-center rounded whitespace-nowrap font-heading text-lg font-black tracking-tight text-brand-red focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:text-2xl">
+        <Link href="/menu" className="inline-flex min-h-11 items-center gap-2 rounded whitespace-nowrap font-heading text-base font-black tracking-tight text-brand-red min-[360px]:text-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:text-2xl">
+          {/* eslint-disable-next-line @next/next/no-img-element -- tiny static logo from /public */}
+          <img src="/brand/chopstix-mark.webp" alt="" width={36} height={36} className="h-9 w-9 rounded-full max-[359px]:hidden" />
           Menciu&apos;s Chopstix
         </Link>
         <div className="flex items-center gap-3">
           <OpenPill businessHours={businessHours} className="hidden text-xs sm:inline-flex" />
-          <Link href="/cart" className="sticker inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-blue px-4 font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue">
-            Cart{" "}
-            <span key={count} className={`whitespace-nowrap tabular-nums ${count > 0 ? "anim-bump inline-block" : ""}`}>
-              {ready ? <>({count})<span className="hidden sm:inline"> · {subtotalLabel}</span></> : "(loading…)"}
+          <Link
+            href="/cart"
+            aria-label={ready ? `Cart, ${count} ${count === 1 ? "item" : "items"}, subtotal ${subtotalLabel}` : "Cart"}
+            className="sticker inline-flex min-h-11 items-center gap-3 rounded-full bg-brand-blue px-4 font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
+          >
+            <span className="relative inline-flex" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2.5 3.5h2.6l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h8.1a1.6 1.6 0 0 0 1.6-1.2l1.4-6.6H6" />
+                <circle cx="9.5" cy="20" r="1.4" />
+                <circle cx="17" cy="20" r="1.4" />
+              </svg>
+              {ready && (
+                <span key={count} className={`absolute -right-3 -top-3 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-paper bg-brand-red px-1 text-xs font-black tabular-nums text-white ${count > 0 ? "anim-bump" : ""}`}>
+                  {count}
+                </span>
+              )}
             </span>
+            <span className="whitespace-nowrap tabular-nums" aria-hidden="true">{ready ? (subtotalLabel.startsWith("$") ? subtotalLabel : "—") : "…"}</span>
           </Link>
         </div>
       </nav>
@@ -50,7 +65,7 @@ export function SiteHeader({ businessHours, ready, count, subtotalLabel, message
         {storageError && <p role="alert" className="py-1 text-sm text-ink">{storageError}</p>}
       </div>
       {toast && message && (
-        <p aria-hidden="true" className="sticker anim-pop pointer-events-none fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-ink px-5 py-3 text-sm font-bold text-white sm:bottom-8">
+        <p aria-hidden="true" className="sticker anim-pop pointer-events-none fixed bottom-24 left-1/2 z-40 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full bg-ink px-5 py-3 text-sm font-bold text-white sm:bottom-8">
           {message.replace(/\.$/, "")} · {count} in cart
         </p>
       )}
