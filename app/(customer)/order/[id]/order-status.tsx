@@ -5,6 +5,8 @@ import { formatCents } from "@/lib/money";
 import type { PublicOrder } from "@/lib/public-order";
 import { clearLastOrder, saveLastOrder } from "@/lib/last-order";
 
+import { useCart } from "../../cart-provider";
+
 const PENDING_MS = 3_000; // waiting for the Stripe webhook
 const ACTIVE_MS = 10_000; // paid, ticket still moving
 
@@ -24,6 +26,7 @@ function isFinal(o: PublicOrder) {
 }
 
 export function OrderStatus({ initial }: { initial: PublicOrder }) {
+  const cart = useCart();
   const [order, setOrder] = useState(initial);
   const [lost, setLost] = useState(false);
   const [tick, setTick] = useState(0);
@@ -34,6 +37,10 @@ export function OrderStatus({ initial }: { initial: PublicOrder }) {
     if (finished) clearLastOrder(order.id);
     else saveLastOrder({ id: order.id, orderNumber: order.orderNumber });
   }, [finished, order.id, order.orderNumber]);
+
+  useEffect(() => {
+    if (cart.ready) cart.cleanupPaidOrder(order);
+  }, [cart, order]);
 
   useEffect(() => {
     if (isFinal(order)) return;
