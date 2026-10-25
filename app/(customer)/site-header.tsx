@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { businessHoursLabel } from "@/lib/menu-display";
 import { LastOrderLink } from "./last-order-link";
 import { OpenPill } from "./open-status";
 import type { BusinessHour } from "@/lib/types";
 
 /** Wordmark, open/closed pill and cart link. Also announces cart changes (screen reader and a short toast). */
-export function SiteHeader({ businessHours, ordersOpen, ready, count, subtotalLabel, message, actionKey, invalidLines, storageError }: {
+export function SiteHeader({ businessHours, ordersOpen, ready, count, subtotalLabel, message, actionKey, noticeSeq, invalidLines, storageError }: {
   businessHours: BusinessHour[] | null;
   ordersOpen: boolean | null;
   ready: boolean;
@@ -17,18 +17,24 @@ export function SiteHeader({ businessHours, ordersOpen, ready, count, subtotalLa
   message: string;
   /** Changes on every cart action (the lines array), so the toast shows once per action. */
   actionKey: unknown;
+  /** Increases each time a change is refused (e.g. closed), which shows the toast even though no line changed. */
+  noticeSeq: number;
   invalidLines: boolean;
   storageError: string;
 }) {
   // A short visual toast; the same words stay in the screen-reader live region below.
-  const [toast, setToast] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const lastNoticeSeq = useRef(noticeSeq);
   useEffect(() => {
     if (!message) return;
-    setToast(true);
-    const timer = setTimeout(() => setToast(false), 2400);
+    // A refused change (closed) shows its own words; a cart change shows "<message> · N in cart".
+    const refused = noticeSeq !== lastNoticeSeq.current;
+    lastNoticeSeq.current = noticeSeq;
+    setToast(refused ? message : `${message.replace(/\.$/, "")} · ${count} in cart`);
+    const timer = setTimeout(() => setToast(null), 2400);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- show once per cart action, not when the message text is re-read
-  }, [actionKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- show once per cart action or refusal, not when the message text is re-read
+  }, [actionKey, noticeSeq]);
 
   return (
     <div className="border-b-2 border-ink bg-paper">
@@ -76,9 +82,9 @@ export function SiteHeader({ businessHours, ordersOpen, ready, count, subtotalLa
           {businessHours && <span className="block font-medium">{businessHoursLabel(businessHours)}</span>}
         </p>
       )}
-      {toast && message && (
+      {toast && (
         <p aria-hidden="true" className="sticker anim-pop pointer-events-none fixed bottom-24 left-1/2 z-40 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full bg-ink px-5 py-3 text-sm font-bold text-white sm:bottom-8">
-          {message.replace(/\.$/, "")} · {count} in cart
+          {toast}
         </p>
       )}
     </div>

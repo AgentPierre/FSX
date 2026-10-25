@@ -62,17 +62,20 @@ export function CartProvider({ menu, settings, businessHours: loadedHours, child
   const businessHours = loadedHours && loadedHours.length > 0 ? loadedHours : null;
   const ordersOpen = useOpenNow(businessHours);
   const closed = ordersOpen === false;
+  // Counts refused changes so the header can show a toast for them (the cart lines did not change).
+  const [noticeSeq, setNoticeSeq] = useState(0);
+  const refuse = () => { setNoticeSeq((seq) => seq + 1); dispatch({ type: "notice", message: CLOSED_MESSAGE }); };
   const count = state.lines.reduce((sum, line) => sum + line.quantity, 0);
   return (
     <CartContext.Provider value={{ ...state, menu, settings, businessHours, ordersOpen, subtotalCents,
       // While closed, nothing can be added or increased (decreases and removal stay allowed). The buttons
       // are disabled too, but this is the rule, so no other screen can get around it.
       add: (selection) => closed
-        ? dispatch({ type: "notice", message: CLOSED_MESSAGE })
+        ? refuse()
         : dispatch({ type: "save", line: { id: crypto.randomUUID(), ...selectionPayload(selection) }, menu, editing: false }),
       edit: (id, selection) => {
         const existing = state.lines.find((line) => line.id === id);
-        if (closed && existing && selection.quantity > existing.quantity) dispatch({ type: "notice", message: CLOSED_MESSAGE });
+        if (closed && existing && selection.quantity > existing.quantity) refuse();
         else dispatch({ type: "save", line: { id, ...selectionPayload(selection) }, menu, editing: true });
       },
       remove: (id) => dispatch({ type: "remove", id }), clear: () => dispatch({ type: "clear" }),
@@ -82,7 +85,7 @@ export function CartProvider({ menu, settings, businessHours: loadedHours, child
       },
     }}>
       <SiteHeader businessHours={businessHours} ordersOpen={ordersOpen} ready={state.ready} count={count} subtotalLabel={subtotalLabel}
-        message={state.message} actionKey={state.lines} invalidLines={invalidLines} storageError={storageError} />
+        message={state.message} actionKey={state.lines} noticeSeq={noticeSeq} invalidLines={invalidLines} storageError={storageError} />
       {children}
     </CartContext.Provider>
   );

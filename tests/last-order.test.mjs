@@ -43,3 +43,11 @@ test("msUntilExpiry counts down to the 12 hour mark and never goes negative", ()
   assert.equal(msUntilExpiry(order, NOW), 3600_000);
   assert.equal(msUntilExpiry({ ...order, savedAt: NOW - 20 * 3600_000 }, NOW), 0);
 });
+
+test("an order is gone exactly at the 12 hour mark, not a moment later", () => {
+  const exactly = JSON.stringify({ id: ID, orderNumber: "0042", savedAt: NOW - 12 * 3600_000 });
+  const justBefore = JSON.stringify({ id: ID, orderNumber: "0042", savedAt: NOW - 12 * 3600_000 + 1 });
+  assert.equal(parseLastOrder(exactly, NOW), null);
+  assert.notEqual(parseLastOrder(justBefore, NOW), null);
+  assert.equal(msUntilExpiry({ id: ID, orderNumber: "0042", savedAt: NOW - 12 * 3600_000 }, NOW), 0);
+});

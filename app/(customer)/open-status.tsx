@@ -19,7 +19,8 @@ export function useOpenNow(businessHours: BusinessHour[] | null): boolean | null
     const timer = setInterval(update, 60_000);
     return () => clearInterval(timer);
   }, [businessHours]);
-  return open;
+  // Without usable hours there is no answer, whatever the last schedule said.
+  return businessHours ? open : null;
 }
 
 /** "Open now" / "Closed now" pill. Colour is never the only signal: the words say it. */

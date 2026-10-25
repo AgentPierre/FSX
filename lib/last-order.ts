@@ -19,7 +19,7 @@ export function parseLastOrder(raw: string | null, now: number): LastOrder | nul
     const { id, orderNumber, savedAt } = value as Partial<LastOrder>;
     if (typeof id !== "string" || !ORDER_ID.test(id)) return null;
     if (typeof orderNumber !== "string" || !/^\d{1,10}$/.test(orderNumber)) return null;
-    if (typeof savedAt !== "number" || !Number.isFinite(savedAt) || now - savedAt > MAX_AGE_MS || savedAt > now + 60_000) return null;
+    if (typeof savedAt !== "number" || !Number.isFinite(savedAt) || now - savedAt >= MAX_AGE_MS || savedAt > now + 60_000) return null;
     return { id, orderNumber, savedAt };
   } catch {
     return null;

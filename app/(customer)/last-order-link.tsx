@@ -17,7 +17,7 @@ export function LastOrderLink({ className = "" }: { className?: string }) {
       if (expiry) clearTimeout(expiry);
       const current = readLastOrder();
       setOrder(current);
-      if (current) expiry = setTimeout(sync, msUntilExpiry(current, Date.now()) + 1000);
+      if (current) expiry = setTimeout(sync, msUntilExpiry(current, Date.now()));
     };
     sync();
     window.addEventListener("storage", sync);
