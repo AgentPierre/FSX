@@ -31,7 +31,9 @@ Stripe is outside the database transaction. If creating or attaching a session f
 expiry and order expiry are compensating actions, each of which can fail independently. The API
 returns a controlled error and logs the order/stage for operations to reconcile. It never returns a
 checkout URL from a failed setup. Avoid logging entire SDK exceptions: they can contain customer
-information or request data.
+information or request data. Preserve only the error's `type`, `code` and `statusCode` alongside
+the order and stage: bounded machine identifiers and a numeric HTTP status are useful for
+distinguishing authentication, connection and parameter failures without recording the error message.
 
 The 64 KiB limit is enforced while reading bytes, before JSON parsing. A header-only limit would
 miss chunked requests. `TextDecoder` handles UTF-8 split across chunks and rejects invalid encoding;

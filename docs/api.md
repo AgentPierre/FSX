@@ -103,7 +103,8 @@ Errors: `400 invalid_request`, `409 store_closed`, `409 item_unavailable`, `422 
 On a Stripe/session-attachment failure, the server attempts to expire any created session and the
 pending order independently. Even if a cleanup attempt fails, the client gets a controlled 502
 without a checkout URL. Safe server logs identify the order and failed stage for reconciliation;
-they do not dump Stripe/SQL exception objects, customer emails or submitted bodies. An attempted
+they include only bounded identifier strings for `type`/`code` and a numeric HTTP `statusCode` when
+present. They do not dump Stripe/SQL exception objects, messages, customer emails or submitted bodies. An attempted
 cleanup is not a guarantee of expiry when Stripe or the database is unreachable. Check those
 operational logs before treating a failed checkout as fully cleaned up.
 

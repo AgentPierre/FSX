@@ -8,7 +8,10 @@ const require = createRequire(import.meta.url);
 const next = require("next/server");
 const errors = loadModule(new URL("../lib/errors.ts", import.meta.url), { "next/server": next });
 
-function route({ createFails = false, attachFails = false, cleanupFails = false, expireFails = false, missingUrl = false } = {}) {
+function route({ createFails = false, attachFails = false, cleanupFails = false, expireFails = false, missingUrl = false,
+  createError = new Error("Stripe unavailable"), cleanupError = new Error("Cleanup unavailable"),
+  expireError = new Error("Database cleanup failed"),
+} = {}) {
   const calls = [];
   const logs = [];
   const order = {
@@ -18,12 +21,12 @@ function route({ createFails = false, attachFails = false, cleanupFails = false,
   const sessions = {
     async create() {
       calls.push("create-session");
-      if (createFails) throw new Error("Stripe unavailable");
+      if (createFails) throw createError;
       return { id: "cs_test_example", url: missingUrl ? null : "https://checkout.stripe.com/test" };
     },
     async expire(id) {
       calls.push(`expire-session:${id}`);
-      if (cleanupFails) throw new Error("Cleanup unavailable");
+      if (cleanupFails) throw cleanupError;
     },
   };
   const { POST } = loadModule(new URL("../app/api/orders/route.ts", import.meta.url), {
@@ -35,7 +38,7 @@ function route({ createFails = false, attachFails = false, cleanupFails = false,
       },
       async expireOrder(id) {
         calls.push(`expire-order:${id}`);
-        if (expireFails) throw new Error("Database cleanup failed");
+        if (expireFails) throw expireError;
       },
     } },
     "@/lib/errors": errors,
@@ -98,3 +101,49 @@ test("both cleanup failures preserve the controlled checkout error and log safe 
   assert.match(JSON.stringify(logs), /order-test/);
   assert.doesNotMatch(JSON.stringify(logs), /private-customer|Database attachment failed/);
 });
+
+test("checkout logs only allowlisted SDK diagnostic fields, never customer data or raw responses", async () => {
+  const createError = Object.assign(new Error("private-customer@example.invalid"), {
+    type: "StripeInvalidRequestError", code: "parameter_invalid_integer", statusCode: 400,
+    raw: { customer_email: "private-customer@example.invalid" },
+    headers: { authorization: "secret-credential" }, requestBody: "private-request-body",
+  });
+  const { logs, POST } = route({ createFails: true, createError });
+  const response = await POST({});
+  assert.equal(response.status, 502);
+  assert.deepEqual(JSON.parse(JSON.stringify(logs[0][1])), {
+    orderId: "order-test", stage: "session_creation",
+    type: "StripeInvalidRequestError", code: "parameter_invalid_integer", statusCode: 400,
+  });
+  assert.doesNotMatch(JSON.stringify(logs), /private-customer|secret-credential|private-request-body|stack/);
+  assert.doesNotMatch(JSON.stringify(await response.json()), /parameter_invalid_integer|StripeInvalidRequestError/);
+});
+
+test("cleanup logs retain their own diagnostic fields and stage", async () => {
+  const { logs, POST } = route({
+    attachFails: true, cleanupFails: true, expireFails: true,
+    cleanupError: { type: "StripeConnectionError", code: "ETIMEDOUT", statusCode: 503, message: "private-message" },
+    expireError: { code: "database_unavailable", statusCode: 503, message: "private-message" },
+  });
+  assert.equal((await POST({})).status, 502);
+  assert.deepEqual(JSON.parse(JSON.stringify(logs[1][1])), {
+    orderId: "order-test", stage: "session_cleanup",
+    type: "StripeConnectionError", code: "ETIMEDOUT", statusCode: 503,
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(logs[2][1])), {
+    orderId: "order-test", stage: "order_cleanup", code: "database_unavailable", statusCode: 503,
+  });
+  assert.doesNotMatch(JSON.stringify(logs), /private-message|private-customer/);
+});
+
+for (const createError of [null, "private-message", {
+  type: "private-customer@example.invalid", code: { body: "private-request" }, statusCode: "400",
+}, { type: "x".repeat(81), code: "bad\nlog-entry", statusCode: 999 }]) {
+  test("unexpected thrown values cannot leak arbitrary metadata or break checkout error handling", async () => {
+    const { logs, POST } = route({ createFails: true, createError });
+    assert.equal((await POST({})).status, 502);
+    assert.deepEqual(JSON.parse(JSON.stringify(logs[0][1])), {
+      orderId: "order-test", stage: "session_creation",
+    });
+  });
+}
