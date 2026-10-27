@@ -51,7 +51,7 @@ export const ownerHistoryQuerySchema = z.object({
   status: z.preprocess((v) => v === "" ? undefined : v, z.string().optional()),
   q: z.string().optional(),
   page: z.unknown().optional(),
-}).transform(({ start, end, ...rest }) => ({
+}).transform(({ start, end, ...rest }): z.input<typeof ownerOrderQuerySchema> => ({
   ...rest,
   from: start ? centralMidnight(start) : undefined,
   to: end ? centralMidnight(end, true) : undefined,

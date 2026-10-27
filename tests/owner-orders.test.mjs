@@ -47,7 +47,7 @@ function setup({ role = "owner", user = { id: "user" }, roleError = null, found 
   });
   const endpoint = loadModule(new URL("../app/api/owner/orders/route.ts", import.meta.url), {
     "next/server": next, "@/lib/errors": errors, "@/lib/owner-orders": service,
-  });
+  }, { URL });
   return { calls, service, ...endpoint };
 }
 const request = (suffix = "") => new Request(`https://fsx.example/api/owner/orders${suffix}`, { headers: { "x-stub-role": "owner" } });
