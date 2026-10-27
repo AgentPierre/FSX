@@ -86,18 +86,26 @@ export async function POST(request: Request) {
         },
         { status: 201, headers: { Location: `/api/orders/${order.id}`, "Cache-Control": "no-store" } },
       );
-    } catch (err) {
-      console.error(err);
+    } catch {
+      // SDK/database errors may include customer data or request bodies. Log context, not the object.
+      console.error("Checkout could not be started", {
+        orderId: order.id,
+        stage: stripeSessionId ? "session_attachment" : "session_creation",
+      });
       if (stripeSessionId) {
         try {
           // A failed database attachment must not leave an open, payable checkout behind.
           await getStripe().checkout.sessions.expire(stripeSessionId);
         } catch {
           // Still expire the pending order if Stripe cleanup fails; flag it for follow-up.
-          console.error("Stripe checkout cleanup failed; check for an unattached payable session.");
+          console.error("Stripe checkout cleanup failed; check for an unattached payable session.", { orderId: order.id });
         }
       }
-      await store.expireOrder(order.id);
+      try {
+        await store.expireOrder(order.id);
+      } catch {
+        console.error("Pending order cleanup failed; reconcile this order.", { orderId: order.id });
+      }
       throw new ApiError(
         502,
         "stripe_error",
@@ -105,6 +113,8 @@ export async function POST(request: Request) {
       );
     }
   } catch (err) {
-    return errorResponse(err);
+    const response = errorResponse(err);
+    response.headers.set("Cache-Control", "no-store");
+    return response;
   }
 }
