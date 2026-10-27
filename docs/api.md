@@ -141,6 +141,14 @@ number), `page` (default 1), `pageSize` (default 25, max 100). Returns
 paymentStatus, itemCount, subtotalCents, taxCents, totalCents, stripeSessionId` and per-line
 `unitPriceCents`. Errors: `400 invalid_request`, `401`, `403`.
 
+T34/SCRUM-73 adds the owner-only server-rendered `/owner/orders` list and
+`/owner/orders/[id]` detail page; both authorize next to the data read using
+`lib/owner-orders.ts`. The list UI uses inclusive Central calendar dates (`start`, `end`)
+while this API retains ISO `from`/`to`. Search also accepts a display `#` before a numeric
+order number. Page is bounded to 1–1,000,000; reversed/equal instant bounds and repeated
+recognized parameters return 400. Success and error responses use `Cache-Control: private, no-store`.
+See [owner history behavior and verification](owner-order-history.md).
+
 **Access model (accepted risk, signed off by the dev lead 12 Oct; note it in the security review, SCRUM-85):** guests have no accounts, so the link
 `/order/{id}` is the credential, like a parcel-tracking link. The id is a random UUID v4 (122 random
 bits), so it cannot be guessed or enumerated. What the link reveals is limited: order number, items,
