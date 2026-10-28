@@ -16,6 +16,22 @@ function lineLabel(l: OrderLine) {
   return parts.join(" ");
 }
 
+/** Keep useful SDK diagnostics, never messages, raw responses or arbitrary nested fields. */
+function errorMetadata(error: unknown) {
+  const metadata: { type?: string; code?: string; statusCode?: number } = {};
+  if (typeof error !== "object" || error === null) return metadata;
+  const source = error as Record<string, unknown>;
+  for (const field of ["type", "code"] as const) {
+    const value = source[field];
+    if (typeof value === "string" && /^[A-Za-z0-9_]{1,80}$/.test(value)) metadata[field] = value;
+  }
+  const status = source.statusCode;
+  if (typeof status === "number" && Number.isInteger(status) && status >= 100 && status <= 599) {
+    metadata.statusCode = status;
+  }
+  return metadata;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await parseBody(request, createOrderSchema);
@@ -87,17 +103,30 @@ export async function POST(request: Request) {
         { status: 201, headers: { Location: `/api/orders/${order.id}`, "Cache-Control": "no-store" } },
       );
     } catch (err) {
-      console.error(err);
+      // SDK/database errors may include customer data or request bodies. Log context, not the object.
+      console.error("Checkout could not be started", {
+        orderId: order.id,
+        stage: stripeSessionId ? "session_attachment" : "session_creation",
+        ...errorMetadata(err),
+      });
       if (stripeSessionId) {
         try {
           // A failed database attachment must not leave an open, payable checkout behind.
           await getStripe().checkout.sessions.expire(stripeSessionId);
-        } catch {
+        } catch (err) {
           // Still expire the pending order if Stripe cleanup fails; flag it for follow-up.
-          console.error("Stripe checkout cleanup failed; check for an unattached payable session.");
+          console.error("Stripe checkout cleanup failed; check for an unattached payable session.", {
+            orderId: order.id, stage: "session_cleanup", ...errorMetadata(err),
+          });
         }
       }
-      await store.expireOrder(order.id);
+      try {
+        await store.expireOrder(order.id);
+      } catch (err) {
+        console.error("Pending order cleanup failed; reconcile this order.", {
+          orderId: order.id, stage: "order_cleanup", ...errorMetadata(err),
+        });
+      }
       throw new ApiError(
         502,
         "stripe_error",
@@ -105,6 +134,8 @@ export async function POST(request: Request) {
       );
     }
   } catch (err) {
-    return errorResponse(err);
+    const response = errorResponse(err);
+    response.headers.set("Cache-Control", "no-store");
+    return response;
   }
 }

@@ -1,4 +1,4 @@
-# API Contract (T25)
+# API Contract (T25 / T30)
 
 Status: **Supabase-backed implementation; acceptance testing in progress.** The T23 tables/menu
 and T25 transactional checkout RPCs are deployed. Every route uses the `DataStore` interface in
@@ -12,6 +12,11 @@ Conventions
 - Money is **integer cents**. Every price is recomputed server-side; any price in a request body is ignored.
 - Times are ISO 8601 instants (UTC). Business rules are evaluated in `America/Chicago`.
 - Errors are always `{ "error": { "code": string, "message": string, "details"?: object } }`.
+- JSON mutation routes using `parseBody` (order submission and ticket updates) require
+  `Content-Type: application/json` and valid UTF-8. Bodies are limited to **64 KiB**; actual
+  streamed bytes are counted, so omitting or understating `Content-Length` cannot bypass the limit.
+  Unsupported media types return `415 unsupported_media_type`; oversized bodies return
+  `413 payload_too_large`. Stripe webhooks keep their separate raw-body signature path.
 - Statuses live in two columns (final ERD, 12 Oct): `payment_status` (`pending_payment` → `paid`, or
   `expired` when checkout is abandoned) and `ticket_status` (`null` → `received` → `in_progress` → `ready`
   → `completed`, or `cancelled`, owner only). There is no `refunded`: the owner refunds in Stripe's
@@ -45,7 +50,8 @@ styling/accessibility under SCRUM-72.
 
 ## POST /api/orders
 
-Creates an order in `pending_payment` and a Stripe Checkout Session.
+Creates an order in `pending_payment` and a Stripe Checkout Session. The public endpoint accepts
+guest orders; it cannot accept a caller-provided price, paid status or kitchen status.
 
 Request
 
@@ -89,8 +95,18 @@ insert order → create Stripe session (`client_reference_id` = order id) → st
 ```
 
 Errors: `400 invalid_request`, `409 store_closed`, `409 item_unavailable`, `422 pickup_too_early`
-(details.earliestPickup), `422 pickup_outside_hours`, `502 stripe_error` (order is set to `expired`),
-`503 stripe_not_configured`.
+(details.earliestPickup), `422 pickup_outside_hours`, `413 payload_too_large`,
+`415 unsupported_media_type`, `502 stripe_error`, `503 stripe_not_configured`,
+`503 database_unavailable`. A price/availability change detected by the database transaction returns
+`409 checkout_conflict` and rolls back creation. Success and failure responses use `Cache-Control: no-store`.
+
+On a Stripe/session-attachment failure, the server attempts to expire any created session and the
+pending order independently. Even if a cleanup attempt fails, the client gets a controlled 502
+without a checkout URL. Safe server logs identify the order and failed stage for reconciliation;
+they include only bounded identifier strings for `type`/`code` and a numeric HTTP `statusCode` when
+present. They do not dump Stripe/SQL exception objects, messages, customer emails or submitted bodies. An attempted
+cleanup is not a guarantee of expiry when Stripe or the database is unreachable. Check those
+operational logs before treating a failed checkout as fully cleaned up.
 
 ## POST /api/webhooks/stripe
 
@@ -155,7 +171,8 @@ Allowed: `received → in_progress → ready → completed`, one step at a time,
 sets `completed`. `cancelled` is allowed from `received`, `in_progress`, `ready` or `completed` for the **owner only**
 (BR-29, e.g. no-shows or a refund after pickup); it is final. An order that is not `paid` has `ticket_status=null` and is rejected.
 Errors: `400 invalid_request`, `401 unauthenticated`, `403 forbidden` (a kitchen user asking for `cancelled`),
-`404 not_found`, `409 invalid_transition` (details.from/to/allowed), `409 not_paid`.
+`404 not_found`, `409 invalid_transition` (details.from/to/allowed), `409 not_paid`,
+`413 payload_too_large`, `415 unsupported_media_type`.
 
 Live Auth verifies Supabase users and reads `staff_users.role`. Ticket writes use the signed-in
 session so RLS and audit attribution enforce owner-only cancellation. In explicitly selected local
@@ -197,3 +214,9 @@ per-order idempotency key does not deduplicate a second request that created a n
 CI exercises real handlers with external boundaries replaced, plus disposable-database tests for
 transactions/RLS. These checks do not replace the first Stripe test-mode checkout and role checks
 on the dev deployment. Do not mark SCRUM-64 accepted until those checks are recorded.
+
+T30 / SCRUM-69 adds submission tests that load the real JSON/Zod validator, business-rule service
+and route together, replacing only storage and Stripe. They cover price/status tampering, contact
+and quantity validation, availability, combo rules, mixed-order lead times, UTC normalization,
+storage failure, request-size enforcement and cleanup failures. See
+[order API testing](order-api-testing.md) for the test boundaries and acceptance steps.
