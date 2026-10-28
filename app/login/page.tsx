@@ -65,7 +65,7 @@ export default function LoginPage() {
             />
           </label>
           {error && (
-            <p id="login-error" role="alert" className="rounded-xl border-2 border-brand-red-dark p-3 leading-relaxed text-brand-red-dark">
+            <p id="login-error" role="alert" className="break-words rounded-xl border-2 border-brand-red-dark p-3 leading-relaxed text-brand-red-dark">
               {error}
             </p>
           )}
