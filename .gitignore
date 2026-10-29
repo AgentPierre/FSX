@@ -30,3 +30,6 @@ next-env.d.ts
 # editor
 .vscode/
 .idea/
+
+# Original full-size food photos; only the resized ones in public/menu are committed.
+/Food/
