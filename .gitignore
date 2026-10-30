@@ -31,5 +31,9 @@ next-env.d.ts
 .vscode/
 .idea/
 
+# local agent tooling
+.Codex/
+.impeccable.md
+
 # Original full-size food photos; only the resized ones in public/menu are committed.
 /Food/

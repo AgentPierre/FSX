@@ -6,7 +6,7 @@ import ts from "typescript";
 // Replace only external boundaries; undeclared imports fail rather than reaching a live service.
 export function loadModule(url, dependencies, globals = {}) {
   const compiled = ts.transpileModule(readFileSync(url, "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const loaded = { exports: {} };
   const wrapper = vm.runInNewContext(`(function(require, module, exports) { ${compiled}\n})`, {

@@ -86,7 +86,7 @@ class StubStore implements DataStore {
           o.customerName.toLowerCase().includes(needle) ||
           o.orderNumber.includes(needle),
       )
-      .sort((a, b) => b.paidAt!.localeCompare(a.paidAt!));
+      .sort((a, b) => b.paidAt!.localeCompare(a.paidAt!) || a.id.localeCompare(b.id));
     const start = (q.page - 1) * q.pageSize;
     return {
       orders: matches.slice(start, start + q.pageSize),
