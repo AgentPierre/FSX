@@ -6,6 +6,14 @@ Dates and displayed times use `America/Chicago`. Both selected dates include the
 
 Select an order number to open `/owner/orders/[id]`. Details show customer contact information, pickup time, historical item names/sizes/prices, quantity, spicy request, combo codes, instructions, totals, and the Stripe Checkout session ID. No card details are stored. A cancelled ticket retains its original payment record; refunds remain in Stripe's dashboard.
 
+Select **Cancel order**, then **Confirm cancellation** to cancel an active or completed paid ticket. **Keep order** dismisses confirmation without changing anything. Only an owner can cancel; the existing ticket API and authenticated database write enforce this. Cancellation is final, keeps history and payment records, and does not request a Stripe refund. Already-cancelled tickets do not offer the action. Errors remain visible and do not show success until the API confirms cancellation.
+
+## Requirements and retention
+
+Per the lead developer's RTM v0.02 mapping: **F21** covers order history, **F22** covers search/filter, and **F23** covers order detail. Related IDs supplied by the lead are **F17**, **F19**, **4.01**, and **F32** (cancellation from detail). Quincy has open RTM updates; verify ambiguous wording with him rather than invent new mappings.
+
+BR-24 says orders are kept **at least six months**, a minimum retention period, not a maximum display window or deletion date. The history page starts with no date filter, and both stores add date bounds only when requested. Older retained orders remain searchable, paginated, and available through detail URLs. This feature adds no age-based hiding, deletion, or retention job.
+
 ## Access and contracts
 
 Both server pages and `GET /api/owner/orders` use `lib/owner-orders.ts`, which verifies the owner role before privileged data-store reads. Anonymous page visits go to sign-in; signed-in staff see an access-denied message. Missing, malformed, pending-payment and expired detail orders return not found. The public guest order endpoint is unchanged and excludes contact/payment references. Owner pages are dynamic and marked noindex; matched middleware responses use private/no-store cache headers.
@@ -16,7 +24,7 @@ The backend already holds the required data, so this change adds no dependency o
 
 ## Verification
 
-`tests/owner-orders.test.mjs` covers API and direct-page role enforcement, spoofed stub headers in live mode, invalid filters, Central-time DST boundaries, paid-only stub pagination, equal-time tie ordering, safe historical detail rendering, URL preservation, empty results and invalid pages. CI owns automated tests, lint, typecheck and build; no local pre-PR test/build gate is used.
+`tests/owner-orders.test.mjs` covers API and direct-page role enforcement, spoofed stub headers in live mode, invalid filters, Central-time DST boundaries, paid-only stub pagination, equal-time tie ordering, safe historical detail rendering, URL preservation, empty results, invalid pages, visibility of orders older than six months, and owner-only cancellation through the existing ticket API. CI owns automated tests, lint, typecheck and build; no local pre-PR test/build gate is used.
 
 CI also runs on feature/fix/codex branch pushes so it can pass before a PR opens. Tests, lint, typecheck and build run independently. The existing `check` job is retained as an aggregate gate and fails for any non-success result, including cancellation or skipped jobs. Repository branch-protection settings are not changed.
 

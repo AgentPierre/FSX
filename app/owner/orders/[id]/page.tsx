@@ -5,6 +5,7 @@ import { getOwnerOrder } from "@/lib/owner-orders";
 import { historyHref, type HistorySearchParams } from "@/lib/owner-order-query";
 import { formatCents } from "@/lib/money";
 import { OrderTime, ownerLink, ownerPageError, TicketBadge } from "../order-ui";
+import CancelOrderButton from "./cancel-order-button";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Order details", robots: { index: false, follow: false } };
@@ -57,5 +58,6 @@ export default async function Page({ params, searchParams }: {
       <p className="mt-1 break-all font-mono text-sm">{order.stripeSessionId || "Not recorded"}</p>
       <p className="mt-3 text-sm text-muted">Refunds are handled in the Stripe dashboard. Cancelled tickets keep their original payment record.</p>
     </section>
+    {order.ticketStatus !== null && order.ticketStatus !== "cancelled" && <CancelOrderButton orderId={order.id} orderNumber={order.orderNumber} />}
   </main>;
 }

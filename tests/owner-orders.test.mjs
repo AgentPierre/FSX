@@ -16,6 +16,11 @@ const query = loadModule(new URL("../lib/owner-order-query.ts", import.meta.url)
 }, { URLSearchParams });
 const money = loadModule(new URL("../lib/money.ts", import.meta.url), {});
 const ui = loadModule(new URL("../lib/ui.ts", import.meta.url), {});
+const CancelOrderButton = loadModule(new URL("../app/owner/orders/[id]/cancel-order-button.tsx", import.meta.url), {
+  "react/jsx-runtime": jsx, react: require("react"),
+  "next/navigation": { useRouter: () => ({ refresh() {} }) },
+  "@/lib/cancel-order": { cancelOrder: async () => {} }, "@/lib/ui": ui,
+}).default;
 const id = "a14be811-d8c1-4c80-9fc1-80affd110116";
 const order = {
   id, orderNumber: "0042", customerName: "Ana <Torres>", customerEmail: "ana@example.com",
@@ -48,7 +53,7 @@ function setup({ role = "owner", user = { id: "user" }, roleError = null, found 
   const endpoint = loadModule(new URL("../app/api/owner/orders/route.ts", import.meta.url), {
     "next/server": next, "@/lib/errors": errors, "@/lib/owner-orders": service,
   }, { URL });
-  return { calls, service, ...endpoint };
+  return { calls, service, auth, ...endpoint };
 }
 const request = (suffix = "") => new Request(`https://fsx.example/api/owner/orders${suffix}`, { headers: { "x-stub-role": "owner" } });
 
@@ -142,6 +147,7 @@ function page(endpoint, detail = false) {
     "react/jsx-runtime": jsx, "next/link": link, "next/headers": { headers: async () => request().headers },
     "@/lib/owner-orders": endpoint.service, "@/lib/owner-order-query": query,
     "@/lib/money": money, "@/lib/ui": ui,
+    "./cancel-order-button": { default: CancelOrderButton },
     [detail ? "../order-ui" : "./order-ui"]: orderUi,
   }).default;
 }
@@ -160,6 +166,90 @@ test("detail page renders historical snapshots, escapes instructions, and preser
   for (const text of [/Original combination plate/, /\$12\.99 each/, /\$28\.12/, /Not provided/, /G2 \+ G5/, /Spicy requested/, /cs_test_reference/, /q=Ana&amp;page=2/]) assert.match(html, text);
   assert.match(html, /&lt;script&gt;/);
   assert.doesNotMatch(html, /<script>|evil.example/);
+  assert.doesNotMatch(html, /Cancel order<\/button>/);
+});
+
+test("all retained orders remain visible without an automatic six-month cutoff", async () => {
+  const oldOrder = { ...order, paidAt: "2024-01-02T18:00:00.000Z", createdAt: "2024-01-02T17:58:00.000Z" };
+  const endpoint = setup({ orders: [oldOrder], found: oldOrder });
+  const html = renderToStaticMarkup(await page(endpoint)({ searchParams: Promise.resolve({}) }));
+  assert.match(html, /2024/);
+  assert.equal(endpoint.calls[0].from, undefined);
+  assert.equal(endpoint.calls[0].to, undefined);
+  assert.match(renderToStaticMarkup(await page(endpoint, true)({ params: Promise.resolve({ id }), searchParams: Promise.resolve({}) })), /2024/);
+  const { stubStore } = loadModule(new URL("../lib/data/stub.ts", import.meta.url), { "./menu": { menuFixture: [] } }, { crypto: globalThis.crypto });
+  const row = await stubStore.insertOrder(oldOrder);
+  await stubStore.setStripeSession(row.id, "cs_old");
+  await stubStore.markPaid(row.id, "cs_old");
+  row.paidAt = oldOrder.paidAt;
+  assert.equal((await stubStore.listOrders({ page: 1, pageSize: 25 })).orders[0].id, row.id);
+});
+
+test("detail offers cancellation for completed paid tickets with a separate confirmation step", async () => {
+  const html = renderToStaticMarkup(await page(setup({ found: { ...order, ticketStatus: "completed" } }), true)({ params: Promise.resolve({ id }), searchParams: Promise.resolve({}) }));
+  assert.match(html, /Cancel order<\/button>/);
+  assert.match(html, /does not issue a refund/);
+  assert.doesNotMatch(html, /Confirm cancellation<\/button>/);
+});
+
+const validation = loadModule(new URL("../lib/validation.ts", import.meta.url), { zod, "./errors": errors }, { TextDecoder });
+function ticketEndpoint(options) {
+  const { auth } = setup(options);
+  const changes = [];
+  return { changes, ...loadModule(new URL("../app/api/orders/[id]/ticket/route.ts", import.meta.url), {
+    "next/server": next, "@/lib/auth": auth, "@/lib/errors": errors,
+    "@/lib/ticket": ticket, "@/lib/validation": validation,
+    "@/lib/data": { store: {
+      getOrder: async () => options.found ?? order,
+      setTicketStatus: async (orderId, status) => { changes.push({ orderId, status }); return { ...order, ticketStatus: status }; },
+    } },
+  }) };
+}
+const cancelRequest = () => new Request(`https://fsx.example/api/orders/${id}/ticket`, {
+  method: "PATCH", headers: { "Content-Type": "application/json", "x-stub-role": "owner" },
+  body: JSON.stringify({ status: "cancelled" }),
+});
+
+test("existing ticket API allows owner cancellation from every non-cancelled paid state", async () => {
+  for (const status of ["received", "in_progress", "ready", "completed"]) {
+    const endpoint = ticketEndpoint({ found: { ...order, ticketStatus: status } });
+    const response = await endpoint.PATCH(cancelRequest(), { params: Promise.resolve({ id }) });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).ticketStatus, "cancelled");
+    assert.equal(endpoint.changes[0].status, "cancelled");
+    assert.equal(order.paymentStatus, "paid");
+  }
+});
+
+for (const [options, status] of [
+  [{ user: null }, 401], [{ role: "staff", found: { ...order, ticketStatus: "ready" } }, 403],
+  [{ found: order }, 409], [{ found: { ...order, paymentStatus: "pending_payment", ticketStatus: null } }, 409],
+]) {
+  test(`cancellation rejects unauthorized or invalid transitions (${status}) without a write`, async () => {
+    const endpoint = ticketEndpoint(options);
+    assert.equal((await endpoint.PATCH(cancelRequest(), { params: Promise.resolve({ id }) })).status, status);
+    assert.equal(endpoint.changes.length, 0);
+  });
+}
+
+test("cancellation client changes only the ticket and waits for a matching success response", async () => {
+  const calls = [];
+  const client = loadModule(new URL("../lib/cancel-order.ts", import.meta.url), {}, { fetch: async (url, options) => {
+    calls.push({ url, options }); return Response.json({ orderId: id, ticketStatus: "cancelled" });
+  } });
+  await client.cancelOrder(id);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, `/api/orders/${id}/ticket`);
+  assert.equal(calls[0].options.credentials, "same-origin");
+  assert.equal(calls[0].options.body, JSON.stringify({ status: "cancelled" }));
+  for (const status of [401, 403, 404, 409, 500]) {
+    const failed = loadModule(new URL("../lib/cancel-order.ts", import.meta.url), {}, { fetch: async () => new Response("private server details", { status }) });
+    await assert.rejects(failed.cancelOrder(id), (error) => !error.message.includes("private server details"));
+  }
+  const mismatch = loadModule(new URL("../lib/cancel-order.ts", import.meta.url), {}, { fetch: async () => Response.json({ orderId: id, ticketStatus: "ready" }) });
+  await assert.rejects(mismatch.cancelOrder(id), /Could not confirm cancellation/);
+  const offline = loadModule(new URL("../lib/cancel-order.ts", import.meta.url), {}, { fetch: async () => { throw new Error("private network details"); } });
+  await assert.rejects(offline.cancelOrder(id), /Check your connection/);
 });
 
 test("direct page visits deny staff and redirect anonymous callers without reading orders", async () => {

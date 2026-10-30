@@ -2,6 +2,8 @@
 
 Assessed: 2026_10_26. Repository: `hiabnegash-lang/FSX`. Baseline: `origin/dev` at `3b70c17be4a3b23a838252327795786a3346d188`.
 
+Subsequent clarification: the user relayed the lead developer's RTM v0.02 mapping: F21 (history), F22 (search/filter), F23 (detail); related F17, F19, 4.01 and F32 (detail cancellation). The RTM hold is resolved. See [current implementation and retention behavior](owner-order-history.md) for the completed scope. The sections below preserve the original pre-implementation assessment.
+
 ## Outcome and scope
 
 [SCRUM-73](https://fustionsolutionsxp.atlassian.net/browse/SCRUM-73) is **Owner dashboard - order history view**. Jira describes search and filtering, assigns Perry, names Jose as support, and gives a due date of 2026_10_28. The repository's `docs/PERRY.md` maps this work to T34, with an older 26 October schedule date. Use Jira for the current due date; confirm schedule discrepancies with the team if needed.
