@@ -55,7 +55,7 @@ Supabase project ref: `csvuhyeplcxvzlvkduwj` · Repo: https://github.com/hiabneg
   The restaurant has **no G7 or G8**; codes match the printed menu exactly, gaps included. This is
   intentional — don't flag it or renumber.
 - **Fixed plates:** C19 Panda Pak (fried rice, sweet and sour chicken, egg roll) has no
-  substitutions; it can be made spicy. The menu has **46 items** (added A4, C19–C21 on 13 Oct).
+  substitutions; it can be made spicy. The menu has **47 items** (added A4, C19–C21 on 13 Oct, and G11 Sesame Chicken on 30 Oct, a new code that is not on the printed menu and is not a Combination Plate half).
 - **Spicy:** an option on the order line, not a separate item. Allowed on every **G, C and T** item
   and **all fried rice R1–R6 (including R4 Steamed Rice)**. Not allowed on appetizers (A, including
   the wings), soups (S) or drinks (B). The ★ on the menu is a display flag only (decided 12–13 Oct).

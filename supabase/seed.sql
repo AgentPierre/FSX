@@ -1,5 +1,5 @@
 -- T23 / SCRUM-62: generated from docs/menu.csv by scripts/generate_menu_seed.py.
--- 46 items, 58 purchasable sizes; integer cents, no invented G7/G8.
+-- 47 items, 59 purchasable sizes; integer cents, no invented G7/G8.
 -- Repeat runs preserve owner edits; this is initial loading, not a menu sync.
 begin;
 
@@ -70,6 +70,10 @@ insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cen
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
 values ('aaeacbb9-77f1-528f-8b9f-a27d4dbff0d4', (select id from public.menu_categories where name = 'Gen Joe''s Specials'), 'G10', 'Spicy Mixed Vegetable', null, true, false, 8) on conflict (code) do nothing;
 insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('e22bc765-eabb-53d2-8f47-b4a475b5eb80', (select id from public.menu_items where code = 'G10'), 'regular', 1, 1250) on conflict (menu_item_id, size_code) do nothing;
+
+insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
+values ('eaaecbb1-f7f5-5a7c-8358-c7737106f17b', (select id from public.menu_categories where name = 'Gen Joe''s Specials'), 'G11', 'Sesame Chicken', 'Contains sesame.', false, false, 9) on conflict (code) do nothing;
+insert into public.item_sizes(id, menu_item_id, size_code, sort_order, price_cents) values ('6643c86e-e33e-5ac2-b347-defa7d033556', (select id from public.menu_items where code = 'G11'), 'regular', 1, 1299) on conflict (menu_item_id, size_code) do nothing;
 
 insert into public.menu_items (id, category_id, code, name, description, is_spicy_flag, is_catering, sort_order)
 values ('bf28fad5-07ca-57bf-b2e4-f863a0c48c5e', (select id from public.menu_categories where name = 'Chef''s Specials'), 'C1', 'Pepper Chicken', 'Served with rice.', true, false, 1) on conflict (code) do nothing;

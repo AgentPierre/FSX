@@ -173,7 +173,7 @@ test("combo halves are choices, never additional priced lines; repeats are permi
   assert.equal(app.saved[0].order.subtotalCents, 1299);
 });
 
-for (const code of ["G7", "G8"]) {
+for (const code of ["G7", "G8", "G11"]) {
   test(`${code} cannot become a combo choice even if it accidentally appears in menu data`, async () => {
     const app = application({ changeMenu: (items) => { items.push({ ...items[2], code }); } });
     assert.equal((await app.POST(jsonRequest(input({

@@ -277,6 +277,23 @@ export const menuFixture: MenuCategory[] = [
           },
         ],
       },
+      {
+        id: "it_g11",
+        code: "G11",
+        name: "Sesame Chicken",
+        description: "Contains sesame.",
+        isAvailable: true,
+        isActive: true,
+        isSpicyFlag: false,
+        isCatering: false,
+        sizes: [
+          {
+            id: "sz_g11",
+            name: "regular",
+            priceCents: 1299,
+          },
+        ],
+      },
     ],
   },
   {
