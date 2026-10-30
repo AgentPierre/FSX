@@ -10,7 +10,7 @@ Sources: [CLAUDE.md](../CLAUDE.md), [PERRY.md](PERRY.md), [erd-review-and-answer
 - `PK` = primary key; `FK` = foreign key; `UQ` = unique. `—` means no key. Every row below explicitly states nullability. Proposed UUID PKs are server-generated, and timestamps are server-set.
 - Prices belong exclusively to `item_sizes`; an unsized item has one `regular` size. Menu availability and archival are independent flags. Item-level availability is the current working assumption, pending sponsor confirmation about individual sizes selling out.
 - Historical orders retain names, size labels, unit prices, tax rate, and totals. Never hard-delete menu data referenced by historical lines, combo components, or price history. Size and component name snapshots match Charles's updated column dictionary.
-- Customers are guests: no customer table. A ticket is a paid order: no ticket table. `staff_users` contains roles only; Supabase Auth owns credentials.
+- Customers are guests: no customer table. A ticket is a paid order: no ticket table. `staff_users` contains roles and an active flag only; Supabase Auth owns credentials.
 - The T23 migration creates these 12 application tables, constraints, indexes, triggers and RLS together. `supabase/seed.sql` loads the menu CSV and restaurant configuration; staff identities are not seeded. No retention cleanup job is added: BR-24 specifies a minimum of six months, not an automatic deletion date.
 
 ## 1. `menu_categories`
@@ -181,6 +181,7 @@ Assigns an application role to a Supabase-authenticated staff or owner account.
 |---|---|---|---|---|
 | `id` | `uuid` | PK; FK → `auth.users.id` | No | Reuses the authenticated Supabase user's identifier. |
 | `role` | `text` | — | No | Grants the application role `staff` or `owner`. |
+| `active` | `boolean` | — | No | Defaults to `true`. An inactive account keeps its row, so audit logs still resolve to a person, but `private.app_role()` returns no role for it and the app refuses it at sign-in. Only trusted administration can change it. |
 
 Rules: one optional role row per Auth user; no customer role, password, or credential column. Role assignment is controlled by trusted administration, not self-service edits. Referenced identities are retained for audit history using restrictive foreign keys. The stored role name is `staff`, not `kitchen`; `auth.users` is externally managed by Supabase and is not one of the 12 application tables.
 

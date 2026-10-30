@@ -15,8 +15,9 @@ export async function requireRole(request: AuthRequest, allowed: Role[]): Promis
   const db = await createClient();
   const { data: { user }, error: authError } = await db.auth.getUser();
   if (authError || !user) throw new ApiError(401, "unauthenticated", "Sign in required.");
-  const { data, error } = await db.from("staff_users").select("role").eq("id",user.id).maybeSingle();
+  const { data, error } = await db.from("staff_users").select("role,active").eq("id",user.id).maybeSingle();
   if (error) throw new ApiError(503, "auth_unavailable", "Could not verify the account role.");
-  if (!data || !allowed.includes(data.role as Role)) throw new ApiError(403,"forbidden","Not allowed for this role.");
+  // An inactive account keeps its row (so audit logs still resolve) but has no access.
+  if (!data || !data.active || !allowed.includes(data.role as Role)) throw new ApiError(403,"forbidden","Not allowed for this role.");
   return data.role as Role;
 }

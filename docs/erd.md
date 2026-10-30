@@ -111,6 +111,7 @@ erDiagram
     staff_users {
         uuid id PK, FK
         text role
+        boolean active "default true"
     }
     business_hours {
         smallint day_of_week PK

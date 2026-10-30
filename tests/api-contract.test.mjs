@@ -43,11 +43,11 @@ function currentUser({ user = { id: "auth-user" }, role = "staff", roleError = n
       assert.equal(table, "staff_users");
       roleReads++;
       return { select(column) {
-        assert.equal(column, "role");
+        assert.equal(column, "role,active");
         return { eq(column, value) {
           assert.equal(column, "id");
           assert.equal(value, user.id);
-          return { maybeSingle: async () => ({ data: role ? { role } : null, error: roleError }) };
+          return { maybeSingle: async () => ({ data: role ? { role, active: true } : null, error: roleError }) };
         } };
       } };
     },
