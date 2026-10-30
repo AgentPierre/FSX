@@ -17,8 +17,8 @@ export default function LoginPage() {
       const db = createClient();
       const result = await db.auth.signInWithPassword({ email: String(form.get("email")).trim(), password: String(form.get("password")) });
       if (result.error) throw new Error("Sign-in failed. Check your email and password.");
-      const { data, error: roleError } = await db.from("staff_users").select("role").eq("id",result.data.user.id).maybeSingle();
-      if (roleError || !data || !["owner","staff"].includes(data.role)) {
+      const { data, error: roleError } = await db.from("staff_users").select("role,active").eq("id",result.data.user.id).maybeSingle();
+      if (roleError || !data || !data.active || !["owner","staff"].includes(data.role)) {
         await db.auth.signOut();
         throw new Error("This account has no restaurant staff access. Contact the project lead.");
       }

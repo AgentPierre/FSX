@@ -182,7 +182,7 @@ Errors: `400 invalid_request`, `401 unauthenticated`, `403 forbidden` (a kitchen
 `404 not_found`, `409 invalid_transition` (details.from/to/allowed), `409 not_paid`,
 `413 payload_too_large`, `415 unsupported_media_type`.
 
-Live Auth verifies Supabase users and reads `staff_users.role`. Ticket writes use the signed-in
+Live Auth verifies Supabase users and reads `staff_users.role` and `active` (an inactive account gets 403). Ticket writes use the signed-in
 session so RLS and audit attribution enforce owner-only cancellation. In explicitly selected local
 stub mode only, `x-stub-role: staff|owner` is accepted. Stub mode is refused in production.
 

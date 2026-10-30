@@ -59,7 +59,7 @@ insert into public.staff_users (id, role) values
 commit;
 ```
 
-Sign in through `/login` as each account. Verify the staff account cannot access owner APIs or cancel tickets, while the owner can. These test accounts must be removed before the final handover: revoke their sessions and ban them first, then remove role/Auth rows only if no audit records reference them. Audit foreign keys deliberately prevent deleting referenced identities; retain those disabled identities to preserve history and confirm they cannot sign in. Do not delete audit records to remove a test account.
+Sign in through `/login` as each account. Verify the staff account cannot access owner APIs or cancel tickets, while the owner can. To switch an account off without deleting it, run `update public.staff_users set active = false where id = '<uuid>'` (and ban the Auth user so existing sessions end); the database and the app both refuse an inactive account. These test accounts must be removed before the final handover: revoke their sessions and ban them first, then remove role/Auth rows only if no audit records reference them. Audit foreign keys deliberately prevent deleting referenced identities; retain those disabled identities to preserve history and confirm they cannot sign in. Do not delete audit records to remove a test account.
 
 ## Application and review
 

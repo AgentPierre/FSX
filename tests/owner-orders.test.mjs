@@ -37,7 +37,7 @@ function setup({ role = "owner", user = { id: "user" }, roleError = null, found 
   const calls = [];
   const db = {
     auth: { getUser: async () => ({ data: { user }, error: null }) },
-    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { role }, error: roleError }) }) }) }),
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { role, active: true }, error: roleError }) }) }) }),
   };
   const auth = loadModule(new URL("../lib/auth.ts", import.meta.url), {
     "./errors": errors, "./data/mode": { usingStub: () => false },

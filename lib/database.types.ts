@@ -436,14 +436,17 @@ export type Database = {
       }
       staff_users: {
         Row: {
+          active: boolean
           id: string
           role: string
         }
         Insert: {
+          active?: boolean
           id: string
           role: string
         }
         Update: {
+          active?: boolean
           id?: string
           role?: string
         }

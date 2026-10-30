@@ -87,7 +87,7 @@ is_catering) · `item_sizes` (price lives here) · `price_change_log` · `orders
 number, customer name, email, optional phone, pickup time, both statuses, subtotal/tax/total,
 tax_rate snapshot, email_sent_at) · `order_lines` (size, qty, price snapshot, **name snapshot**,
 spicy choice, instructions) · `order_line_components` (the two combo halves) · `payments` (Stripe
-references only, unique constraint on session id) · `order_status_log` · `staff_users` (role) ·
+references only, unique constraint on session id) · `order_status_log` · `staff_users` (role, active) ·
 `business_hours` · `settings`
 
 Decisions that shape the schema (scrum 9 Oct):
