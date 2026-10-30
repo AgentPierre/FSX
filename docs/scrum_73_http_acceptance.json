@@ -1,0 +1,138 @@
+{
+  "commit": "5a19b6cc3e0beb389340d8c7070eeefb6a6d97ae",
+  "environment": "localhost, explicit in-memory stub mode",
+  "passed": 26,
+  "failed": 0,
+  "cases": [
+    {
+      "case": "Default pagination",
+      "passed": true,
+      "evidence": "total=30; first=25; second=5"
+    },
+    {
+      "case": "Pagination has no duplicate rows",
+      "passed": true,
+      "evidence": "overlap=0"
+    },
+    {
+      "case": "Combined customer and status search",
+      "passed": true,
+      "evidence": "matches=6"
+    },
+    {
+      "case": "Display order-number search",
+      "passed": true,
+      "evidence": "matches=1"
+    },
+    {
+      "case": "Search treats percent as a literal",
+      "passed": true,
+      "evidence": "matches=0"
+    },
+    {
+      "case": "Invalid query ?page=0",
+      "passed": true,
+      "evidence": "status=400"
+    },
+    {
+      "case": "Invalid query ?page=1&page=2",
+      "passed": true,
+      "evidence": "status=400"
+    },
+    {
+      "case": "Invalid query ?status=refunded",
+      "passed": true,
+      "evidence": "status=400"
+    },
+    {
+      "case": "Invalid query ?pageSize=101",
+      "passed": true,
+      "evidence": "status=400"
+    },
+    {
+      "case": "Invalid query ?from=2026-10-31T00:00:00Z&to=2026-10-30T00:00:00Z",
+      "passed": true,
+      "evidence": "status=400"
+    },
+    {
+      "case": "Local anonymous history denial",
+      "passed": true,
+      "evidence": "status=401"
+    },
+    {
+      "case": "Local staff history denial",
+      "passed": true,
+      "evidence": "status=403"
+    },
+    {
+      "case": "Server-rendered second page",
+      "passed": true,
+      "evidence": "status=200; detailLinks=5"
+    },
+    {
+      "case": "Out-of-range page recovery",
+      "passed": true,
+      "evidence": "First-page recovery link rendered"
+    },
+    {
+      "case": "Empty results",
+      "passed": true,
+      "evidence": "Empty-state message rendered"
+    },
+    {
+      "case": "Paid detail and filter return link",
+      "passed": true,
+      "evidence": "Owner contact/reference and filtered return link rendered"
+    },
+    {
+      "case": "Confirmation is not initially submitted",
+      "passed": true,
+      "evidence": "Cancel action rendered; confirmation initially closed (HTML only)"
+    },
+    {
+      "case": "Guest response excludes owner contact/payment reference",
+      "passed": true,
+      "evidence": "No email or Checkout session in guest response"
+    },
+    {
+      "case": "Staff cannot cancel",
+      "passed": true,
+      "evidence": "status=403"
+    },
+    {
+      "case": "Owner cancels completed ticket and retains paid history",
+      "passed": true,
+      "evidence": "ticket=cancelled; payment=paid; totalUnchanged=True"
+    },
+    {
+      "case": "Cancelled detail removes cancel action",
+      "passed": true,
+      "evidence": "Cancel action absent after cancellation"
+    },
+    {
+      "case": "Cancellation is final; repeat request rejected",
+      "passed": true,
+      "evidence": "status=409"
+    },
+    {
+      "case": "API lower payment boundary includes exact instant",
+      "passed": true,
+      "evidence": "matches=5"
+    },
+    {
+      "case": "API upper payment boundary excludes exact instant",
+      "passed": true,
+      "evidence": "matches=25"
+    },
+    {
+      "case": "Inclusive Central calendar date range",
+      "passed": true,
+      "evidence": "status=200; day=2026-10-30"
+    },
+    {
+      "case": "Local staff direct detail denial",
+      "passed": true,
+      "evidence": "Access denied without contact/reference rendering"
+    }
+  ]
+}
