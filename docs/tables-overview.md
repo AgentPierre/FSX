@@ -36,7 +36,7 @@ Defines a dish and its display attributes, independently of size-specific prices
 | `code` | `text` | UQ | No | Holds the sponsor's menu code, such as `G1` or `R1`. |
 | `name` | `text` | — | No | Holds the current customer-facing item name. |
 | `description` | `text` | — | Yes | Describes the dish when descriptive text is available. |
-| `is_available` | `boolean` | — | No | Enables ordering today, proposed default `true`, independently of archival. |
+| `is_available` | `boolean` | — | No | Enables ordering today, proposed default `true`, independently of archival. This is the sold-out flag, decided at item level (owner, 30 Oct). Kitchen staff and the owner can change it; a database guard refuses a staff update that changes anything else on the item. |
 | `is_active` | `boolean` | — | No | Keeps the item on the customer menu, proposed default `true`, and becomes `false` on archival. |
 | `is_spicy_flag` | `boolean` | — | No | Displays the menu's spicy star, proposed default `false`, without defining the customer's spicy request. |
 | `is_catering` | `boolean` | — | No | Marks an item as requiring the catering lead time, proposed default `false`. |

@@ -195,7 +195,7 @@ Set `FSX_DATA_SOURCE=stub` locally to use it; it cannot insert demo rows in the 
 ## Open questions
 
 - Order-number format is confirmed: a running number displayed as `#0042`, unique for all time; gaps are normal.
-- Sold-out at item vs size level — modelled at item level for now.
+- Sold-out is decided at item level (owner, 30 Oct 2026). Kitchen staff and the owner may mark an item sold out or available again; only the owner can change its name, description, order, archive status or prices.
 - Email on `ready` (Resend or similar) — not part of this contract until the dependency is approved.
 - Request validation uses `zod` (approved by the dev lead as a new dependency, 7 Oct).
 

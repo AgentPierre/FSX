@@ -4,6 +4,7 @@ This branch prepares the database schema and initial menu load. It does not appl
 
 ## Files and scope
 
+- `supabase/migrations/20261030240000_scrum65_staff_sold_out.sql`: lets staff update `menu_items` through a row policy and a guard trigger that refuses any staff change except `is_available` (sold out). Menu edits, prices, settings and creating items stay owner-only.
 - `supabase/migrations/20261013014325_t23_database_schema.sql`: all 12 tables, constraints, indexes, RLS, menu timestamps, price/status audit triggers and owner-only ticket cancellation.
 - `supabase/seed.sql`: exactly 46 menu items and 58 purchasable sizes generated from `docs/menu.csv`, plus seven business-hour rows and one settings row.
 - `scripts/generate_menu_seed.py`: reproducible CSV-to-SQL conversion using Decimal arithmetic and stable IDs; it never edits the CSV.
