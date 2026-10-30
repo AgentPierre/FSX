@@ -3,7 +3,9 @@ import type { Role } from "./types";
 import { usingStub } from "./data/mode";
 import { createClient } from "./supabase/server";
 
-export async function requireRole(request: Request, allowed: Role[]): Promise<Role> {
+export type AuthRequest = { headers: Pick<Headers, "get"> };
+
+export async function requireRole(request: AuthRequest, allowed: Role[]): Promise<Role> {
   if (usingStub()) {
     const role = request.headers.get("x-stub-role");
     if (!role) throw new ApiError(401, "unauthenticated", "Sign in required.");

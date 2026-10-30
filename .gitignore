@@ -30,3 +30,7 @@ next-env.d.ts
 # editor
 .vscode/
 .idea/
+
+# local agent tooling
+.Codex/
+.impeccable.md

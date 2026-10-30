@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  push:
+    branches: ['feature/**', 'fix/**', 'codex/**']
   pull_request:
     branches: [dev, main]
 
@@ -17,6 +19,22 @@ jobs:
       - run: node --test "tests/*.test.mjs"
 
   check:
+    if: always()
+    needs: [checkout-cleanup, lint, typecheck, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every verification job to succeed
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: |
+          for result in ${RESULTS//,/ }; do
+            if [ "$result" != "success" ]; then
+              echo "A required job did not succeed: $result"
+              exit 1
+            fi
+          done
+
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +44,27 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - run: npm run typecheck
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - run: npm run build
         env:
           # Placeholders so the build can run; no real secrets in CI.
