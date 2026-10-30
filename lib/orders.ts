@@ -12,7 +12,7 @@ import type {
 } from "./types";
 
 const COMBO_CODE = "G1";
-const COMBO_HALF = /^G([2-9]|10)$/;
+const COMBO_HALF = /^G([2-6]|9|10)$/;
 
 /**
  * Validates a cart against business rules and the database, recomputes every price

@@ -42,17 +42,55 @@ export const createOrderSchema = z.object({
 
 export const ticketPatchSchema = z.object({ status: z.string() });
 
-/** Parse JSON + schema; any failure becomes a 400 invalid_request. Prices in the body are ignored. */
+// Above the maximum normal 30-line checkout, including escaped Unicode instructions.
+export const MAX_JSON_BODY_BYTES = 64 * 1024;
+
+/** Bound bytes before JSON parsing; Content-Length alone cannot protect chunked requests. */
+async function readJson(request: Request): Promise<unknown> {
+  const mediaType = request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+  if (mediaType !== "application/json") {
+    throw new ApiError(415, "unsupported_media_type", "Use Content-Type: application/json.");
+  }
+  const tooLarge = () => new ApiError(413, "payload_too_large", "JSON body must be 64 KiB or smaller.");
+  const declaredLength = request.headers.get("content-length");
+  if (declaredLength && /^\d+$/.test(declaredLength) && Number(declaredLength) > MAX_JSON_BODY_BYTES) {
+    throw tooLarge();
+  }
+  const reader = request.body?.getReader();
+  if (!reader) throw new ApiError(400, "invalid_request", "Body must be valid JSON.");
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  let bytes = 0;
+  let text = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > MAX_JSON_BODY_BYTES) throw tooLarge();
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+  } catch (err) {
+    // Stop reading rejected streams. Do not wait for a remote sender to finish uploading.
+    void reader.cancel().catch(() => {});
+    if (err instanceof ApiError) throw err;
+    throw new ApiError(400, "invalid_request", "Body must be valid UTF-8 JSON.");
+  } finally {
+    reader.releaseLock();
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new ApiError(400, "invalid_request", "Body must be valid JSON.");
+  }
+}
+
+/** Parse bounded JSON + schema. Unknown fields, including browser prices/statuses, are ignored. */
 export async function parseBody<T extends z.ZodType>(
   request: Request,
   schema: T,
 ): Promise<z.infer<T>> {
-  let json: unknown;
-  try {
-    json = await request.json();
-  } catch {
-    throw new ApiError(400, "invalid_request", "Body must be valid JSON.");
-  }
+  const json = await readJson(request);
   const result = schema.safeParse(json);
   if (!result.success) {
     throw new ApiError(400, "invalid_request", "Request failed validation.", {
