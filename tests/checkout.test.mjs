@@ -110,7 +110,12 @@ test("checkout immediately renders unavailable hours before pickup selection", (
         businessHours: displayedHours,
       }),
     },
+    "../use-account-email": { useAccountEmail: () => "" },
     "@/lib/cart": cart,
+    "@/lib/customer-accounts": loadModule(
+      new URL("../lib/customer-accounts.ts", import.meta.url),
+      {},
+    ),
     "@/lib/menu-display": loadModule(
       new URL("../lib/menu-display.ts", import.meta.url),
       {},

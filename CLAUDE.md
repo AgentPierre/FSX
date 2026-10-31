@@ -9,7 +9,9 @@ Team 09 · Fusion Solutions Experience (XP) · CIS 4375 · Fall 2026.
 **Hard deadline: 17 Nov 2026** — no code or documentation changes after this date.
 
 Three surfaces, one application, one codebase, one login system:
-1. **Customer ordering** (public, no account) — browse menu, cart, checkout, pay, confirmation.
+1. **Customer ordering** (public; an account is optional) — browse menu, cart, checkout, pay, confirmation.
+   Guest checkout always works. A customer may also sign up (sign in, password reset) to see a "My orders" list
+   (owner decision 30 Oct; hidden until `NEXT_PUBLIC_CUSTOMER_ACCOUNTS=on`).
 2. **Kitchen / counter view** (role: `staff`) — paid orders appear within **5 seconds**.
 3. **Owner dashboard** (role: `owner`) — order history, menu & price management, reports.
 
@@ -19,7 +21,8 @@ dense, high-contrast operational UI. Same codebase, two visual treatments.
 
 ## Stack
 - **Next.js (App Router) + TypeScript + Tailwind** — route groups for `(customer)`, `staff`, `owner`
-- **Supabase** — Postgres, Auth (staff only; customers are guests), Realtime (kitchen view)
+- **Supabase** — Postgres, Auth (staff and owner with roles; customers are guests, with an optional account that has
+  **no** `staff_users` row and so no staff powers), Realtime (kitchen view)
 - **Stripe** — Checkout in **test mode**. We never see, transmit or store card data. An order is
   marked paid **only** by the Stripe webhook, never by the client.
 - **Email** — order-ready notification (Resend or similar). New external dependency, logged as a change.
@@ -97,6 +100,9 @@ Decisions that shape the schema (scrum 9 Oct):
   `order_lines`. The Combination Plate's two halves are *not* separate $0 items.
 - One Stripe session per order. A retry after abandoning checkout is a new order; the old one expires.
 - Phone is **optional**. Special instructions (BR-08) are kept (`order_lines.instructions`).
+- `orders.customer_user_id` (nullable, set null if the account is deleted) links an order to a signed-in customer. The
+  server sets it in a separate best-effort update after the order is created (`create_checkout_order` is untouched), only
+  from the verified session. Staff and owner sessions cannot read it; "My orders" reads it with the service role.
 - Orders are kept at least **6 months** (BR-24), a minimum, not a delete date.
 - Order-ready email is required; SMS is optional and deferred (needs carrier registration).
 
@@ -106,7 +112,7 @@ lands, build against `lib/data/store.ts` (the `DataStore` interface) and its in-
 ## Folder layout
 ```
 app/
-  (customer)/   menu, cart, checkout, order/[id]
+  (customer)/   menu, cart, checkout, order/[id], account (sign-in, sign-up, My orders, password reset)
   staff/        kitchen & counter ticket board
   owner/        orders, menu, reports
   api/

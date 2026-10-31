@@ -62,6 +62,7 @@ function application({ now = "2026-10-26T17:00:00Z", changeMenu = () => {}, inse
   }, { Date: Clock });
   const endpoint = loadModule(new URL("../app/api/orders/route.ts", import.meta.url), {
     "next/server": next, "@/lib/data": { store }, "@/lib/errors": errors,
+    "@/lib/account-orders": { linkOrderToSignedInCustomer: async () => {} },
     "@/lib/orders": service, "@/lib/validation": validation,
     "@/lib/stripe": {
       stripeConfigured: () => true, siteTag: () => "test-only",

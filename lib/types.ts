@@ -56,6 +56,8 @@ export interface Order {
   customerName: string;
   customerEmail: string;
   customerPhone: string | null;
+  /** Signed-in customer's account id; null for a guest order. Server-side only: no view may return it. */
+  customerUserId?: string | null;
   pickupTime: string;
   paymentStatus: PaymentStatus;
   ticketStatus: TicketStatus | null;

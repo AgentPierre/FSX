@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { linkOrderToSignedInCustomer } from "@/lib/account-orders";
 import { store } from "@/lib/data";
 import { ApiError, errorResponse } from "@/lib/errors";
 import { createPendingOrder } from "@/lib/orders";
@@ -45,6 +46,8 @@ export async function POST(request: Request) {
     }
 
     const { order, earliestPickup } = await createPendingOrder(body);
+    // Best effort, never blocks checkout: a signed-in customer's order is linked to their account.
+    await linkOrderToSignedInCustomer(request, order.id);
 
     let stripeSessionId: string | undefined;
     try {

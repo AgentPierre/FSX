@@ -10,7 +10,7 @@ Sources: [CLAUDE.md](../CLAUDE.md), [PERRY.md](PERRY.md), [erd-review-and-answer
 - `PK` = primary key; `FK` = foreign key; `UQ` = unique. `—` means no key. Every row below explicitly states nullability. Proposed UUID PKs are server-generated, and timestamps are server-set.
 - Prices belong exclusively to `item_sizes`; an unsized item has one `regular` size. Menu availability and archival are independent flags. Item-level availability is the current working assumption, pending sponsor confirmation about individual sizes selling out.
 - Historical orders retain names, size labels, unit prices, tax rate, and totals. Never hard-delete menu data referenced by historical lines, combo components, or price history. Size and component name snapshots match Charles's updated column dictionary.
-- Customers are guests: no customer table. A ticket is a paid order: no ticket table. `staff_users` contains roles and an active flag only; Supabase Auth owns credentials.
+- Customers are guests by default: no customer table. An optional signed-in customer is an `auth.users` user with no `staff_users` row; their orders carry `orders.customer_user_id`. A ticket is a paid order: no ticket table. `staff_users` contains roles and an active flag only; Supabase Auth owns credentials.
 - The T23 migration creates these 12 application tables, constraints, indexes, triggers and RLS together. `supabase/seed.sql` loads the menu CSV and restaurant configuration; staff identities are not seeded. No retention cleanup job is added: BR-24 specifies a minimum of six months, not an automatic deletion date.
 
 ## 1. `menu_categories`
@@ -77,7 +77,7 @@ Rules: old and new prices are positive and differ; the trigger logs actual updat
 
 ## 5. `orders`
 
-Stores a guest checkout, its financial snapshots, and its payment and fulfillment states.
+Stores a checkout (guest or signed-in customer), its financial snapshots, and its payment and fulfillment states.
 
 | Column | Type | Keys | Nullable | Description |
 |---|---|---|---|---|
@@ -97,6 +97,7 @@ Stores a guest checkout, its financial snapshots, and its payment and fulfillmen
 | `email_sent_at` | `timestamptz` | — | Yes | Records successful dispatch of the one order-ready email, with null meaning not yet sent. |
 | `created_at` | `timestamptz` | — | No | Records when the pending checkout was created. |
 | `updated_at` | `timestamptz` | — | No | Records the latest order update. |
+| `customer_user_id` | `uuid` | FK | Yes | Links the order to the signed-in customer's Supabase Auth account (`auth.users`), or null for a guest order. The server sets it after the order is created. Set to null if the account is deleted, so the order stays. Not readable by staff or owner sessions; server routes read it with the service role. |
 
 Rules and proposals:
 

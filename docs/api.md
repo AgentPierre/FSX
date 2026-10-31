@@ -52,6 +52,9 @@ styling/accessibility under SCRUM-72.
 
 Creates an order in `pending_payment` and a Stripe Checkout Session. The public endpoint accepts
 guest orders; it cannot accept a caller-provided price, paid status or kitchen status.
+If the caller has a Supabase Auth session, the new order is also linked to that account (`orders.customer_user_id`)
+so it shows in `GET /api/account/orders`. The account comes only from the verified session, never from the request
+body, and linking is best effort: a guest, or a failed link, leaves an ordinary guest order and checkout continues.
 
 Request
 
@@ -138,6 +141,15 @@ Never returns email, phone or Stripe ids. `Cache-Control: no-store`. Errors: `40
 The `/order/[id]` page polls this every 3 s while `pending_payment`, every 10 s until the ticket is
 `completed` or `cancelled`, and stops when the order is `expired`.
 
+## GET /api/account/orders
+
+The signed-in customer's own paid orders, newest first, at most 50 (no paging). Requires a Supabase Auth session;
+any signed-in account works, and customers have no `staff_users` row. The account id comes only from the verified
+session, so nothing in the request can ask for someone else's orders.
+Returns `{ orders: [...] }`, each in the same reduced shape as `GET /api/orders/{id}`: no email, phone, Stripe ids
+or account id. Only orders placed while signed in appear (an order is linked to the account when it is placed;
+older guest orders are not linked). `Cache-Control: private, no-store`. Errors: `401 unauthenticated`.
+
 ## GET /api/staff/tickets
 
 Kitchen and counter board. Roles `staff` or `owner`. Returns `{ "tickets": KitchenTicket[] }`: paid orders whose
@@ -165,7 +177,7 @@ order number. Page is bounded to 1–1,000,000; reversed/equal instant bounds an
 recognized parameters return 400. Success and error responses use `Cache-Control: private, no-store`.
 See [owner history behavior and verification](owner-order-history.md).
 
-**Access model (accepted risk, signed off by the dev lead 12 Oct; note it in the security review, SCRUM-85):** guests have no accounts, so the link
+**Access model (accepted risk, signed off by the dev lead 12 Oct; note it in the security review, SCRUM-85):** guests need no account (accounts are optional, see `GET /api/account/orders`), so the link
 `/order/{id}` is the credential, like a parcel-tracking link. The id is a random UUID v4 (122 random
 bits), so it cannot be guessed or enumerated. What the link reveals is limited: order number, items,
 the customer's own instructions, totals, pickup time and status. No name, email, phone or payment
