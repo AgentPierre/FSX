@@ -72,6 +72,10 @@ class StubStore implements DataStore {
       )
       .sort((a, b) => a.paidAt!.localeCompare(b.paidAt!));
   }
+  async setOrderCustomer(orderId: string, userId: string) {
+    const o = this.orders.get(orderId);
+    if (o && o.paymentStatus === "pending_payment" && !o.customerUserId) o.customerUserId = userId;
+  }
   async listCustomerOrders(userId: string) {
     return [...this.orders.values()]
       .filter((o) => o.paymentStatus === "paid" && o.customerUserId === userId)

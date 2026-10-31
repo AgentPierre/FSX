@@ -37,6 +37,12 @@ export interface DataStore {
    * session, never from a request. The Supabase version reads with the service role, so this filter is the guard.
    */
   listCustomerOrders(userId: string): Promise<Order[]>;
+  /**
+   * Links a just-created, still unpaid order to a signed-in customer's account. Only an order that is still
+   * `pending_payment` and not yet linked changes, so an existing link can never be reassigned. The id MUST come
+   * from a verified session.
+   */
+  setOrderCustomer(orderId: string, userId: string): Promise<void>;
   /** Paid orders for the owner dashboard, newest first, filtered and paginated. */
   listOrders(query: OwnerOrderQuery): Promise<OwnerOrderPage>;
   /**

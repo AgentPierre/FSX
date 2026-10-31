@@ -30,7 +30,7 @@ function load({ user = { id: "user-a" }, orders = [], reads = [], stub = false }
   });
   const store = { listCustomerOrders: async (id) => { reads.push(id); return orders; } };
   return loadModule(new URL("../lib/account-orders.ts", import.meta.url), {
-    "./auth": auth, "./data": { store }, "./public-order": publicOrder,
+    "./auth": auth, "./data": { store }, "./errors": errors, "./public-order": publicOrder,
   });
 }
 const request = (headers = {}) => ({ headers: new Headers(headers) });

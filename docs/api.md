@@ -52,6 +52,9 @@ styling/accessibility under SCRUM-72.
 
 Creates an order in `pending_payment` and a Stripe Checkout Session. The public endpoint accepts
 guest orders; it cannot accept a caller-provided price, paid status or kitchen status.
+If the caller has a Supabase Auth session, the new order is also linked to that account (`orders.customer_user_id`)
+so it shows in `GET /api/account/orders`. The account comes only from the verified session, never from the request
+body, and linking is best effort: a guest, or a failed link, leaves an ordinary guest order and checkout continues.
 
 Request
 

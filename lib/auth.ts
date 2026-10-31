@@ -23,17 +23,20 @@ export async function requireRole(request: AuthRequest, allowed: Role[]): Promis
 }
 
 /**
- * The id of whoever is signed in (customer, staff or owner), taken only from the verified session.
- * Never accept a user id from a request body, query string or header in live mode.
+ * The id of whoever is signed in (customer, staff or owner), or null for a guest. Taken only from the verified
+ * session: never accept a user id from a request body, query string or header in live mode. A Route Handler
+ * can refresh an expired session itself, so this works without the middleware.
  */
-export async function requireUser(request: AuthRequest): Promise<string> {
-  if (usingStub()) {
-    const id = request.headers.get("x-stub-user");
-    if (!id) throw new ApiError(401, "unauthenticated", "Sign in required.");
-    return id;
-  }
+export async function optionalUser(request: AuthRequest): Promise<string | null> {
+  if (usingStub()) return request.headers.get("x-stub-user");
   const db = await createClient();
   const { data: { user }, error } = await db.auth.getUser();
-  if (error || !user) throw new ApiError(401, "unauthenticated", "Sign in required.");
-  return user.id;
+  return error || !user ? null : user.id;
+}
+
+/** Like optionalUser, but a guest is refused with 401. */
+export async function requireUser(request: AuthRequest): Promise<string> {
+  const id = await optionalUser(request);
+  if (!id) throw new ApiError(401, "unauthenticated", "Sign in required.");
+  return id;
 }

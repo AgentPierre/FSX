@@ -141,6 +141,11 @@ class SupabaseStore implements DataStore {
     const orders = await mapOrders(data ?? []);
     return orders.sort((a,b) => (a.paidAt ?? a.createdAt).localeCompare(b.paidAt ?? b.createdAt));
   }
+  async setOrderCustomer(orderId: string, userId: string): Promise<void> {
+    const { error } = await createAdminClient().from("orders").update({ customer_user_id: userId })
+      .eq("id", orderId).eq("payment_status","pending_payment").is("customer_user_id", null);
+    check(error);
+  }
   async listCustomerOrders(userId: string): Promise<Order[]> {
     // Service-role read, so the account filter below is the only thing keeping one customer from another's orders.
     const { data, error } = await createAdminClient().from("orders").select("*,payments!inner(paid_at)")

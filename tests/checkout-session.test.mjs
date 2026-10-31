@@ -31,6 +31,7 @@ function route({ createFails = false, attachFails = false, cleanupFails = false,
   };
   const { POST } = loadModule(new URL("../app/api/orders/route.ts", import.meta.url), {
     "next/server": next,
+    "@/lib/account-orders": { linkOrderToSignedInCustomer: async () => {} },
     "@/lib/data": { store: {
       async setStripeSession() {
         calls.push("attach-session");
