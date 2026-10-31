@@ -61,6 +61,22 @@ commit;
 
 Sign in through `/login` as each account. Verify the staff account cannot access owner APIs or cancel tickets, while the owner can. To switch an account off without deleting it, run `update public.staff_users set active = false where id = '<uuid>'` (and ban the Auth user so existing sessions end); the database and the app both refuse an inactive account. These test accounts must be removed before the final handover: revoke their sessions and ban them first, then remove role/Auth rows only if no audit records reference them. Audit foreign keys deliberately prevent deleting referenced identities; retain those disabled identities to preserve history and confirm they cannot sign in. Do not delete audit records to remove a test account.
 
+## Customer accounts (switched off until enabled)
+
+Customers may create an account to see the orders they place while signed in (owner decision, 30 Oct 2026). Guest checkout is unchanged. A customer is an ordinary Supabase Auth user with **no** `staff_users` row, so every staff and owner permission refuses them; `/login` stays staff only and refuses a customer account. Pages: `/account/sign-in`, `/account/sign-up`, `/account` (My orders).
+
+**The switch.** The pages and the header "Sign in" link exist only when `NEXT_PUBLIC_CUSTOMER_ACCOUNTS` is `on`. When it is unset, the pages show the normal "page not found" and the header is unchanged. The value is baked in at build time, so changing it on Vercel needs a redeploy.
+
+**Before turning it on** (each is a hosted setting that is not in git, so record any change here):
+
+1. Apply the `orders.customer_user_id` migration (dry run first), after the two earlier pending migrations.
+2. In Supabase Dashboard → Authentication, turn **public sign-ups on** and set a minimum password length of at least 8 (the form also checks 8).
+3. Set the redirect addresses: **Site URL** to the live site, and add `<site>/account/sign-in` to **Redirect URLs**, because the confirmation email returns the customer there.
+4. Email: use custom SMTP through Resend on the verified `chopstixhouston.com` domain (host `smtp.resend.com`, port 465, user `resend`, sender `no-reply@chopstixhouston.com`, password a sending-only API key). The key lives only in the Supabase dashboard, never in git or documents. Turn **Confirm email** on.
+5. Set `NEXT_PUBLIC_CUSTOMER_ACCOUNTS=on` in Vercel and redeploy.
+
+**After turning it on**, test on the live site: sign up, confirm the email, sign in, place an order while signed in, see it under My orders, sign out, and check a guest checkout still works. Delete customer test accounts before the final handover, together with the staff test accounts.
+
 ## Application and review
 
 T25 migration `20261020000443_t25_live_data_store` is now deployed after Hiab's review and approval of PR #10 and its dry run. The two menu migrations were applied first, then current `dev` was merged into that branch. Hiab requested the final migration push immediately after merging PR #10; the refreshed dry run still listed only that unchanged migration. Read-only checks confirmed all three invoker RPCs, their service-role-only execution grants, the private sequence, and migration version `20261020000443`. No checkout was simulated by writing payment/order rows directly. The first Stripe test-mode checkout and labelled account acceptance tests are still required.

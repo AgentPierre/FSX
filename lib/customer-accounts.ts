@@ -1,0 +1,45 @@
+import type { PublicOrder } from "./public-order";
+
+export const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * Customer accounts stay hidden (links gone, pages return 404) until NEXT_PUBLIC_CUSTOMER_ACCOUNTS is "on".
+ * The value is baked in at build time, so changing it needs a redeploy. It must be read exactly like this so
+ * Next.js can inline it into browser code as well as server code.
+ */
+export function customerAccountsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_CUSTOMER_ACCOUNTS === "on";
+}
+
+/** First problem with the sign-up form, or null. Supabase enforces its own rules too; this just fails early. */
+export function credentialsError(email: string, password: string): string | null {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Enter a valid email address.";
+  if (password.length < MIN_PASSWORD_LENGTH) return `Use at least ${MIN_PASSWORD_LENGTH} characters for your password.`;
+  return null;
+}
+
+const TICKET_LABEL = {
+  received: "Received",
+  in_progress: "Being made",
+  ready: "Ready for pickup",
+  completed: "Picked up",
+  cancelled: "Cancelled",
+} as const;
+
+/** One short status for the order list. Only paid orders are listed, so a missing ticket status means received. */
+export function orderStatusLabel(order: Pick<PublicOrder, "paymentStatus" | "ticketStatus">): string {
+  if (order.paymentStatus === "expired") return "Not completed";
+  return TICKET_LABEL[order.ticketStatus ?? "received"];
+}
+
+/** "Tue, Nov 3, 6:00 PM" in Houston time, whatever the customer's device clock says. */
+export function pickupLabel(iso: string): string {
+  return new Date(iso).toLocaleString("en-US", {
+    timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  });
+}
+
+/** "2 × Sesame Chicken, 1 × Egg Roll" */
+export function itemsSummary(order: Pick<PublicOrder, "lines">): string {
+  return order.lines.map((line) => `${line.quantity} × ${line.name}`).join(", ");
+}
