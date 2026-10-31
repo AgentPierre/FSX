@@ -134,6 +134,11 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
               </span>
             )}
           </label>
+          {!signUp && (
+            <p>
+              <Link href="/account/forgot-password" className={textLink}>Forgot your password?</Link>
+            </p>
+          )}
           {error && (
             <p id="account-error" role="alert" className="break-words rounded-xl border-2 border-brand-red-dark p-3 leading-relaxed text-brand-red-dark">
               {error}

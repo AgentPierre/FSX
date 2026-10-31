@@ -53,3 +53,19 @@ test("the item summary lists quantity and name, in order", () => {
   assert.equal(accounts.itemsSummary(order), "2 × Sesame Chicken, 1 × Egg Roll");
   assert.equal(accounts.itemsSummary({ lines: [] }), "");
 });
+
+test("the email and password rules can be asked one at a time", () => {
+  assert.equal(accounts.emailError("maria@example.com"), null);
+  assert.match(accounts.emailError("not an email"), /valid email/);
+  assert.equal(accounts.passwordError("12345678"), null);
+  assert.match(accounts.passwordError("1234567"), /at least 8/);
+});
+
+test("choosing a new password needs 8 characters and two matching entries", () => {
+  assert.equal(accounts.newPasswordError("longenough1", "longenough1"), null);
+  assert.match(accounts.newPasswordError("short", "short"), /at least 8/);
+  assert.match(accounts.newPasswordError("longenough1", "longenough2"), /do not match/);
+  assert.match(accounts.newPasswordError("longenough1", ""), /do not match/);
+  // The length rule is reported first, so a short password never gets a misleading "do not match" message.
+  assert.match(accounts.newPasswordError("short", "different"), /at least 8/);
+});

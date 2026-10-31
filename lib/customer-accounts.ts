@@ -11,11 +11,22 @@ export function customerAccountsEnabled(): boolean {
   return process.env.NEXT_PUBLIC_CUSTOMER_ACCOUNTS === "on";
 }
 
+export function emailError(email: string): string | null {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? null : "Enter a valid email address.";
+}
+
+export function passwordError(password: string): string | null {
+  return password.length >= MIN_PASSWORD_LENGTH ? null : `Use at least ${MIN_PASSWORD_LENGTH} characters for your password.`;
+}
+
 /** First problem with the sign-up form, or null. Supabase enforces its own rules too; this just fails early. */
 export function credentialsError(email: string, password: string): string | null {
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Enter a valid email address.";
-  if (password.length < MIN_PASSWORD_LENGTH) return `Use at least ${MIN_PASSWORD_LENGTH} characters for your password.`;
-  return null;
+  return emailError(email) ?? passwordError(password);
+}
+
+/** First problem with the "choose a new password" form, or null. */
+export function newPasswordError(password: string, confirm: string): string | null {
+  return passwordError(password) ?? (password === confirm ? null : "The two passwords do not match.");
 }
 
 const TICKET_LABEL = {

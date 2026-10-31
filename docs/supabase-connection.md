@@ -71,7 +71,7 @@ Customers may create an account to see the orders they place while signed in (ow
 
 1. Apply the `orders.customer_user_id` migration (dry run first), after the two earlier pending migrations.
 2. In Supabase Dashboard → Authentication, turn **public sign-ups on** and set a minimum password length of at least 8 (the form also checks 8).
-3. Set the redirect addresses: **Site URL** to the live site, and add `<site>/account/sign-in` to **Redirect URLs**, because the confirmation email returns the customer there.
+3. Set the redirect addresses: **Site URL** to the live site, and add `<site>/account/sign-in` (the confirmation email returns the customer there) and `<site>/account/reset-password` (the password reset email) to **Redirect URLs**. A reset link only works on the device and browser that asked for it; on another one the page asks for a new link.
 4. Email: use custom SMTP through Resend on the verified `chopstixhouston.com` domain (host `smtp.resend.com`, port 465, user `resend`, sender `no-reply@chopstixhouston.com`, password a sending-only API key). The key lives only in the Supabase dashboard, never in git or documents. Turn **Confirm email** on.
 5. Set `NEXT_PUBLIC_CUSTOMER_ACCOUNTS=on` in Vercel and redeploy.
 
