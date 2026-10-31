@@ -29,6 +29,11 @@ export function newPasswordError(password: string, confirm: string): string | nu
   return passwordError(password) ?? (password === confirm ? null : "The two passwords do not match.");
 }
 
+/** Checkout pre-fill: use the signed-in email only if the customer has not typed one already. */
+export function prefillEmail(current: string, accountEmail: string): string {
+  return current.trim() ? current : accountEmail;
+}
+
 const TICKET_LABEL = {
   received: "Received",
   in_progress: "Being made",

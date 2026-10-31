@@ -177,7 +177,7 @@ order number. Page is bounded to 1–1,000,000; reversed/equal instant bounds an
 recognized parameters return 400. Success and error responses use `Cache-Control: private, no-store`.
 See [owner history behavior and verification](owner-order-history.md).
 
-**Access model (accepted risk, signed off by the dev lead 12 Oct; note it in the security review, SCRUM-85):** guests have no accounts, so the link
+**Access model (accepted risk, signed off by the dev lead 12 Oct; note it in the security review, SCRUM-85):** guests need no account (accounts are optional, see `GET /api/account/orders`), so the link
 `/order/{id}` is the credential, like a parcel-tracking link. The id is a random UUID v4 (122 random
 bits), so it cannot be guessed or enumerated. What the link reveals is limited: order number, items,
 the customer's own instructions, totals, pickup time and status. No name, email, phone or payment

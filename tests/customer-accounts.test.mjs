@@ -69,3 +69,10 @@ test("choosing a new password needs 8 characters and two matching entries", () =
   // The length rule is reported first, so a short password never gets a misleading "do not match" message.
   assert.match(accounts.newPasswordError("short", "different"), /at least 8/);
 });
+
+test("checkout pre-fill never overwrites an email the customer already typed", () => {
+  assert.equal(accounts.prefillEmail("", "maria@example.com"), "maria@example.com");
+  assert.equal(accounts.prefillEmail("   ", "maria@example.com"), "maria@example.com");
+  assert.equal(accounts.prefillEmail("other@example.com", "maria@example.com"), "other@example.com");
+  assert.equal(accounts.prefillEmail("", ""), "");
+});

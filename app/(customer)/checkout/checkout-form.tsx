@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "../cart-provider";
+import { useAccountEmail } from "../use-account-email";
 import { menuItems, resolveSize, validateSelection } from "@/lib/cart";
 import {
   buildCheckoutPayload,
@@ -14,6 +15,7 @@ import {
   houstonInstant,
   pickupError,
 } from "@/lib/checkout";
+import { prefillEmail } from "@/lib/customer-accounts";
 import { businessHoursLabel } from "@/lib/menu-display";
 import { CUSTOMER_LIMITS } from "@/lib/validation";
 import { formatCents, taxCents } from "@/lib/money";
@@ -28,6 +30,7 @@ export function CheckoutForm() {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [submission] = useState(createCheckoutSubmission);
   const errorRef = useRef<HTMLDivElement>(null);
+  const accountEmail = useAccountEmail();
   useEffect(() => {
     const update = () => setNow(new Date());
     update();
@@ -47,6 +50,12 @@ export function CheckoutForm() {
   useEffect(() => {
     if (error) errorRef.current?.focus();
   }, [error]);
+  // A signed-in customer's email fills the field if it is already on screen and still empty;
+  // the input's defaultValue covers the form mounting after the session is read.
+  useEffect(() => {
+    const input = document.getElementById("email") as HTMLInputElement | null;
+    if (input && accountEmail) input.value = prefillEmail(input.value, accountEmail);
+  }, [accountEmail]);
 
   const { settings, businessHours } = cart;
   if (!cart.ready || !now)
@@ -299,6 +308,7 @@ export function CheckoutForm() {
                   name={name}
                   type={type}
                   autoComplete={autoComplete}
+                  defaultValue={name === "email" ? accountEmail : undefined}
                   maxLength={maxLength}
                   required={name !== "phone"}
                   aria-invalid={!!fields[name]}
