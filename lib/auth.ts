@@ -21,3 +21,19 @@ export async function requireRole(request: AuthRequest, allowed: Role[]): Promis
   if (!data || !data.active || !allowed.includes(data.role as Role)) throw new ApiError(403,"forbidden","Not allowed for this role.");
   return data.role as Role;
 }
+
+/**
+ * The id of whoever is signed in (customer, staff or owner), taken only from the verified session.
+ * Never accept a user id from a request body, query string or header in live mode.
+ */
+export async function requireUser(request: AuthRequest): Promise<string> {
+  if (usingStub()) {
+    const id = request.headers.get("x-stub-user");
+    if (!id) throw new ApiError(401, "unauthenticated", "Sign in required.");
+    return id;
+  }
+  const db = await createClient();
+  const { data: { user }, error } = await db.auth.getUser();
+  if (error || !user) throw new ApiError(401, "unauthenticated", "Sign in required.");
+  return user.id;
+}

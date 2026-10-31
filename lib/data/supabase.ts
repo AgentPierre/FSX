@@ -9,6 +9,9 @@ import type { DataStore, MarkPaidResult } from "./store";
 
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"];
 
+/** "My orders" shows the newest 50; there is no paging in the smallest version of customer accounts. */
+const CUSTOMER_ORDER_LIMIT = 50;
+
 function check(error: PostgrestError | null) {
   if (!error) return;
   if (error.code === "23514") throw new ApiError(409, "checkout_conflict", "The menu or order changed. Refresh and try again.");
@@ -47,6 +50,7 @@ async function mapOrders(rows: OrderRow[]): Promise<Order[]> {
     return {
       id: row.id, orderNumber: row.display_order_number,
       customerName: row.customer_name, customerEmail: row.customer_email, customerPhone: row.customer_phone,
+      customerUserId: row.customer_user_id,
       pickupTime: row.pickup_at, paymentStatus: row.payment_status as Order["paymentStatus"],
       ticketStatus: row.ticket_status as Order["ticketStatus"], paidAt: payment?.paid_at ?? null,
       subtotalCents: row.subtotal_cents, taxCents: row.tax_cents, totalCents: row.total_cents,
@@ -136,6 +140,14 @@ class SupabaseStore implements DataStore {
     check(error);
     const orders = await mapOrders(data ?? []);
     return orders.sort((a,b) => (a.paidAt ?? a.createdAt).localeCompare(b.paidAt ?? b.createdAt));
+  }
+  async listCustomerOrders(userId: string): Promise<Order[]> {
+    // Service-role read, so the account filter below is the only thing keeping one customer from another's orders.
+    const { data, error } = await createAdminClient().from("orders").select("*,payments!inner(paid_at)")
+      .eq("customer_user_id", userId).eq("payment_status","paid")
+      .order("created_at", { ascending: false }).order("id").limit(CUSTOMER_ORDER_LIMIT);
+    check(error);
+    return mapOrders(data ?? []);
   }
   async listOrders(query: OwnerOrderQuery): Promise<OwnerOrderPage> {
     let request = createAdminClient().from("orders").select("*,payments!inner(paid_at)", { count: "exact" }).eq("payment_status","paid");

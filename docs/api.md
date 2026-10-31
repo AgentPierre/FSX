@@ -138,6 +138,15 @@ Never returns email, phone or Stripe ids. `Cache-Control: no-store`. Errors: `40
 The `/order/[id]` page polls this every 3 s while `pending_payment`, every 10 s until the ticket is
 `completed` or `cancelled`, and stops when the order is `expired`.
 
+## GET /api/account/orders
+
+The signed-in customer's own paid orders, newest first, at most 50 (no paging). Requires a Supabase Auth session;
+any signed-in account works, and customers have no `staff_users` row. The account id comes only from the verified
+session, so nothing in the request can ask for someone else's orders.
+Returns `{ orders: [...] }`, each in the same reduced shape as `GET /api/orders/{id}`: no email, phone, Stripe ids
+or account id. Only orders placed while signed in appear (an order is linked to the account when it is placed;
+older guest orders are not linked). `Cache-Control: private, no-store`. Errors: `401 unauthenticated`.
+
 ## GET /api/staff/tickets
 
 Kitchen and counter board. Roles `staff` or `owner`. Returns `{ "tickets": KitchenTicket[] }`: paid orders whose
