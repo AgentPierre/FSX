@@ -276,6 +276,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string | null
+          customer_user_id: string | null
           display_order_number: string
           earliest_pickup_at: string
           email_sent_at: string | null
@@ -294,6 +295,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone?: string | null
+          customer_user_id?: string | null
           display_order_number: string
           earliest_pickup_at: string
           email_sent_at?: string | null
@@ -312,6 +314,7 @@ export type Database = {
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
+          customer_user_id?: string | null
           display_order_number?: string
           earliest_pickup_at?: string
           email_sent_at?: string | null

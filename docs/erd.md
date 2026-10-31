@@ -70,6 +70,7 @@ erDiagram
         timestamptz email_sent_at "nullable"
         timestamptz created_at
         timestamptz updated_at
+        uuid customer_user_id FK "nullable, links a signed-in customer's account, set null on account delete"
     }
     order_lines {
         uuid id PK

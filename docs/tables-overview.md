@@ -97,6 +97,7 @@ Stores a guest checkout, its financial snapshots, and its payment and fulfillmen
 | `email_sent_at` | `timestamptz` | — | Yes | Records successful dispatch of the one order-ready email, with null meaning not yet sent. |
 | `created_at` | `timestamptz` | — | No | Records when the pending checkout was created. |
 | `updated_at` | `timestamptz` | — | No | Records the latest order update. |
+| `customer_user_id` | `uuid` | FK | Yes | Links the order to the signed-in customer's Supabase Auth account (`auth.users`), or null for a guest order. The server sets it after the order is created. Set to null if the account is deleted, so the order stays. Not readable by staff or owner sessions; server routes read it with the service role. |
 
 Rules and proposals:
 
